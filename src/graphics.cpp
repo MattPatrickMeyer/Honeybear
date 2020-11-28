@@ -223,6 +223,7 @@ void Graphics::SetMatrix4(const std::string& shader_id, const std::string& unifo
 void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name)
 {
     int width, height, nrChannels;
+    //stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
     textures[texture_id].Generate(width, height, data);
     stbi_image_free(data);
@@ -308,7 +309,7 @@ uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
 
     glGenTextures(1, &frame_buffer.tex_colour_buffer);
     glBindTexture(GL_TEXTURE_2D, frame_buffer.tex_colour_buffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -367,7 +368,27 @@ uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    frame_buffer.width = width;
+    frame_buffer.height = height;
+
     frame_buffers.push_back(frame_buffer);
 
     return frame_buffers.size() - 1;
+}
+
+void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+
+    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
+
+    Graphics::ActivateShader("default");
+    Graphics::SetMatrix4("default", "projection", projection);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
+    glBindVertexArray(frame_buffer->quad_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
 }

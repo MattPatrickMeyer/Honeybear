@@ -17,8 +17,9 @@ void Engine::Init(int window_width, int window_height, const std::string& window
 
     Graphics::LoadTexture("sprites", "res/images/sprites.png");
 
-    Graphics::CreateSprite(1, "sprites", 0, 96,  32, 32);
-    Graphics::CreateSprite(2, "sprites", 0, 128, 32, 32);
+    Graphics::CreateSprite(1, "sprites", 0,   96,  32, 32);
+    Graphics::CreateSprite(2, "sprites", 0,   128, 32, 32);
+    Graphics::CreateSprite(3, "sprites", 448, 128, 32, 32);
 
     frame_buffer_index = Graphics::AddFrameBuffer(window_width, window_height);
 }
@@ -52,22 +53,17 @@ void Engine::Render()
     Graphics::SetMatrix4("default", "projection", projection);
 
     Graphics::BeginBatch();
-    for(int x = 0; x < 100; ++x)
+    for(int x = 0; x < 60; ++x)
     {
-        for(int y = 0; y < 100; ++y)
+        for(int y = 0; y < 34; ++y)
         {
-            Graphics::DrawSprite(Graphics::sprites[2], glm::vec2(x * 32.0f, y * 32.0f));
+            Graphics::DrawSprite(Graphics::sprites[1], glm::vec2(x * 32.0f, y * 32.0f));
         }
     }
     Graphics::EndBatch();
     Graphics::FlushBatch();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
-    glBindVertexArray(frame_buffer->quad_VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    Graphics::RenderFrameBuffer(frame_buffer_index);
 
     Graphics::SwapBuffers();
 }
