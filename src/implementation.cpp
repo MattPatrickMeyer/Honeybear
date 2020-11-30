@@ -16,8 +16,8 @@ Implementation::Implementation()
     Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     Graphics::LoadShader("test",    "res/shaders/default.vert", "res/shaders/test.frag");
 
-    Graphics::LoadTexture("sprites", "res/images/sprites.png", GL_NEAREST);
-    Graphics::LoadTexture("ui",      "res/images/ui.png",      GL_LINEAR);
+    Graphics::LoadTexture("sprites", "res/images/sprites.png", NEAREST);
+    Graphics::LoadTexture("ui",      "res/images/ui.png",      LINEAR);
 
     Graphics::CreateSprite(1, "sprites", 0,   96,  32, 32);
     Graphics::CreateSprite(2, "sprites", 0,   128, 32, 32);
@@ -47,7 +47,7 @@ void Implementation::Draw()
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
 
-    Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100, 100), another_test_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100, 100), ui_frame_buffer);
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

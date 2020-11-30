@@ -314,12 +314,12 @@ void Graphics::SetMatrix4(const std::string& shader_id, const std::string& unifo
     glUniformMatrix4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), 1, false, glm::value_ptr(matrix));
 }
 
-void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const GLuint filter)
+void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type)
 {
     int width, height, nrChannels;
     //stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
-    textures[texture_id].Generate(width, height, data, filter);
+    textures[texture_id].Generate(width, height, data, filter_type);
     stbi_image_free(data);
 }
 
@@ -491,8 +491,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glViewport(0, 0, window_width, window_height);
 
     glm::mat4 projection = glm::ortho(0.0f, (float)window_width, 0.0f, (float)window_height, -1.0f, 1.0f);
-
-    Graphics::ActivateShader("default", projection);
+    SetShaderProjection(activated_shader_id, projection);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glActiveTexture(GL_TEXTURE0);

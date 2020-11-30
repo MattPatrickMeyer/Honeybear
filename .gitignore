@@ -1,3 +1,5 @@
 Makefile
+Makefile_old
 .vscode/
+*.dll
 *.exe

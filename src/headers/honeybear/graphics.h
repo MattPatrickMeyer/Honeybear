@@ -73,7 +73,7 @@ namespace Honeybear::Graphics
     void SetShaderProjection(const std::string& shader_id, const glm::mat4& projection);
     void SetMatrix4(const std::string& shader_id, const std::string& uniform_name, const glm::mat4& matrix);
 
-    void LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const GLuint filter);
+    void LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type);
     void BindTexture(const std::string& texture_id, const uint8_t texture_unit);
 
     void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
