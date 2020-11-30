@@ -1,6 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include <glad/glad.h>
+
 struct Texture
 {
     uint32_t ID;
@@ -12,11 +14,9 @@ struct Texture
     uint32_t image_format;
     uint32_t wrap_s;
     uint32_t wrap_t;
-    uint32_t filter_min;
-    uint32_t filter_max;
 
     Texture();
-    void Generate(uint32_t width, uint32_t height, unsigned char* data);
+    void Generate(const uint32_t width, const uint32_t height, unsigned char* data, const GLuint filter);
 };
 
 #endif

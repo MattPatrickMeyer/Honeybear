@@ -13,6 +13,8 @@ namespace Honeybear
         void Run();
         void Render();
         void ProcessInput();
+
+        virtual void Draw() = 0;
     };
 };
 

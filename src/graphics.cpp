@@ -11,6 +11,7 @@ using namespace Honeybear;
 
 std::unordered_map<std::string, uint32_t> Graphics::shaders;
 std::unordered_map<std::string, Texture> Graphics::textures;
+std::map<uint8_t, uint32_t> Graphics::bound_textures;
 std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
@@ -291,6 +292,17 @@ void Graphics::ActivateShader(const std::string& shader_id, const glm::mat4& pro
     activated_shader_id = shader_id;
 }
 
+void Graphics::DeactivateShader()
+{
+    if(quad_batch.index_count > 0)
+    {
+        EndBatch();
+        FlushBatch();
+    }
+
+    ActivateShader("default");
+}
+
 void Graphics::SetShaderProjection(const std::string& shader_id, const glm::mat4& projection)
 {
     Graphics::SetMatrix4(shader_id, "projection", projection);
@@ -302,12 +314,12 @@ void Graphics::SetMatrix4(const std::string& shader_id, const std::string& unifo
     glUniformMatrix4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), 1, false, glm::value_ptr(matrix));
 }
 
-void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name)
+void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const GLuint filter)
 {
     int width, height, nrChannels;
     //stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
-    textures[texture_id].Generate(width, height, data);
+    textures[texture_id].Generate(width, height, data, filter);
     stbi_image_free(data);
 }
 
@@ -316,6 +328,8 @@ void Graphics::BindTexture(const std::string& texture_id, const uint8_t texture_
     glActiveTexture(texture_units[texture_unit]);
     uint32_t ID = textures[texture_id].ID;
     glBindTexture(GL_TEXTURE_2D, ID);
+
+    bound_textures[texture_unit] = ID;
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index)
@@ -323,14 +337,31 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     if(frame_buffer_index != current_frame_buffer_index)
     {
         BindFrameBuffer(frame_buffer_index);
-        BindTexture(sprite.texture_id, 0);
+    }
+
+    bool start_new_batch = false;
+    bool bind_texture = false;
+    uint32_t texture_id = textures[sprite.texture_id].ID;
+    if(bound_textures[0] != texture_id)
+    {
+        start_new_batch = true;
+        bind_texture = true;
     }
 
     if(quad_batch.index_count >= max_index_count)
     {
+        start_new_batch = true;
+    }
+
+    if(start_new_batch)
+    {
         EndBatch();
         FlushBatch();
         BeginBatch();
+        if(bind_texture)
+        {
+            BindTexture(sprite.texture_id, 0);
+        }
     }
 
     // bottom right
