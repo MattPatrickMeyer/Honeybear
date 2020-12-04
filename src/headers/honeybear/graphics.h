@@ -18,6 +18,7 @@ namespace Honeybear::Graphics
     {
         glm::vec2 position;
         glm::vec2 tex_coords;
+        glm::vec4 colour;
     };
 
     struct QuadBatch
@@ -64,6 +65,7 @@ namespace Honeybear::Graphics
     void Init(uint32_t window_width, uint32_t window_height, const std::string& window_title);
     void InitScreenRenderData();
     void Clear();
+    void ClearFrameBuffers();
     void SwapBuffers();
 
     void LoadShader(const std::string& shader_id, const std::string& vertex_file_name, const std::string& fragment_file_name);
@@ -78,6 +80,7 @@ namespace Honeybear::Graphics
 
     void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
     void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index);
+    void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour);
 
     //uint32_t AddFrameBuffer();
     uint32_t AddFrameBuffer(uint32_t width, uint32_t height);

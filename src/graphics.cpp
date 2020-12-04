@@ -90,27 +90,37 @@ void Graphics::InitScreenRenderData()
     glGenBuffers(1, &screen_render_data.quad_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, screen_render_data.quad_VBO);
 
+    glm::vec4 colour;
+    colour.r = 1.0f;
+    colour.g = 1.0f;
+    colour.b = 1.0f;
+    colour.a = 1.0f;
+
     Vertex buffer[4];
     // bottom right
     buffer[0].position.x = window_width;
     buffer[0].position.y = window_height;
     buffer[0].tex_coords.x = 1.0f;
     buffer[0].tex_coords.y = 1.0f;
+    buffer[0].colour = colour;
     // top right
     buffer[1].position.x = window_width;
     buffer[1].position.y = 0.0f;
     buffer[1].tex_coords.x = 1.0f;
     buffer[1].tex_coords.y = 0.0f;
+    buffer[1].colour = colour;
     // top left
     buffer[2].position.x = 0.0f;
     buffer[2].position.y = 0.0f;
     buffer[2].tex_coords.x = 0.0f;
     buffer[2].tex_coords.y = 0.0f;
+    buffer[2].colour = colour;
     // bottom left
     buffer[3].position.x = 0.0f;
     buffer[3].position.y = window_height;
     buffer[3].tex_coords.x = 0.0f;
     buffer[3].tex_coords.y = 1.0f;
+    buffer[3].colour = colour;
 
     glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
 
@@ -121,6 +131,10 @@ void Graphics::InitScreenRenderData()
     // tex coords
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tex_coords));
+
+    // colour
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
 
     uint32_t indices[] = {
         0, 1, 3,
@@ -155,6 +169,10 @@ void Graphics::InitQuadBatch()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tex_coords));
 
+    // colour
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
+
     // todo: this should just be set up once and reused
     uint32_t indices[max_index_count];
     uint32_t offset = 0;
@@ -185,6 +203,18 @@ void Graphics::Clear()
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void Graphics::ClearFrameBuffers()
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    for(size_t i = 0; i < frame_buffers.size(); ++i)
+    {
+        FrameBuffer* frame_buffer = &frame_buffers[i];
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void Graphics::SwapBuffers()
@@ -334,6 +364,17 @@ void Graphics::BindTexture(const std::string& texture_id, const uint8_t texture_
 
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index)
 {
+    glm::vec4 colour;
+    colour.r = 1.0f;
+    colour.g = 1.0f;
+    colour.b = 1.0f;
+    colour.a = 1.0f;
+
+    DrawSprite(sprite, position, frame_buffer_index, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour)
+{
     if(frame_buffer_index != current_frame_buffer_index)
     {
         BindFrameBuffer(frame_buffer_index);
@@ -344,7 +385,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     uint32_t texture_id = textures[sprite.texture_id].ID;
     if(bound_textures[0] != texture_id)
     {
-        start_new_batch = true;
+        start_new_batch = quad_batch.index_count > 0;
         bind_texture = true;
     }
 
@@ -358,10 +399,11 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
         EndBatch();
         FlushBatch();
         BeginBatch();
-        if(bind_texture)
-        {
-            BindTexture(sprite.texture_id, 0);
-        }
+    }
+
+    if(bind_texture)
+    {
+        BindTexture(sprite.texture_id, 0);
     }
 
     // bottom right
@@ -369,6 +411,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     quad_batch.buffer_ptr->position.y = position.y + sprite.height;
     quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
+    quad_batch.buffer_ptr->colour = colour;
     quad_batch.buffer_ptr++;
 
     // top right
@@ -376,6 +419,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     quad_batch.buffer_ptr->position.y = position.y;
     quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y;
+    quad_batch.buffer_ptr->colour = colour;
     quad_batch.buffer_ptr++;
 
     // top left
@@ -383,6 +427,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     quad_batch.buffer_ptr->position.y = position.y;
     quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y;
+    quad_batch.buffer_ptr->colour = colour;
     quad_batch.buffer_ptr++;
 
     // bottom left
@@ -390,6 +435,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     quad_batch.buffer_ptr->position.y = position.y + sprite.height;
     quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
+    quad_batch.buffer_ptr->colour = colour;
     quad_batch.buffer_ptr++;
 
     quad_batch.index_count += 6;

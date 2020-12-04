@@ -7,11 +7,13 @@ uint32_t test_frame_buffer;
 uint32_t another_test_frame_buffer;
 uint32_t ui_frame_buffer;
 
+float test = 0.0f;
+
 Implementation::Implementation()
 {
     int window_width = 1920;
     int window_height = 1080;
-    Init(window_width, window_height, "Honeybear!");
+    Engine::Init(window_width, window_height, "Honeybear!");
 
     Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     Graphics::LoadShader("test",    "res/shaders/default.vert", "res/shaders/test.frag");
@@ -31,6 +33,11 @@ Implementation::Implementation()
     Run();
 }
 
+void Implementation::Update(const float dt)
+{
+    test += 50.0f * dt;
+}
+
 void Implementation::Draw()
 {
     Graphics::ActivateShader("default");
@@ -43,11 +50,13 @@ void Implementation::Draw()
         }
     }
 
+    glm::vec4 colour(1.0f, 0.0f, 0.0f, 1.0f);
+
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, colour);
 
-    Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100, 100), ui_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100 + test, 100), ui_frame_buffer);
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

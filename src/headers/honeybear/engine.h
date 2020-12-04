@@ -14,7 +14,10 @@ namespace Honeybear
         void Render();
         void ProcessInput();
 
+        float Ticks();
+
         virtual void Draw() = 0;
+        virtual void Update(const float dt) = 0;
     };
 };
 
