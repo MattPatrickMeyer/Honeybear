@@ -11,8 +11,12 @@ float test = 0.0f;
 
 Implementation::Implementation()
 {
-    int window_width = 1920;
-    int window_height = 1080;
+    // int window_width = 2560;
+    // int window_height = 1440;
+    // int window_width = 1920;
+    // int window_height = 1080;
+    int window_width = 1280;
+    int window_height = 720;
     Engine::Init(window_width, window_height, "Honeybear!");
 
     Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
@@ -29,8 +33,6 @@ Implementation::Implementation()
     test_frame_buffer =         Graphics::AddFrameBuffer(window_width, window_height);
     another_test_frame_buffer = Graphics::AddFrameBuffer(window_width, window_height);
     ui_frame_buffer =           Graphics::AddFrameBuffer(window_width, window_height);
-
-    Run();
 }
 
 void Implementation::Update(const float dt)

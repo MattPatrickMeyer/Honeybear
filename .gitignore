@@ -4,3 +4,5 @@ Makefile_old
 *.dll
 *.exe
 .DS_Store
+main
+main.dSYM

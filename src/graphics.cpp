@@ -43,8 +43,19 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 {
     // init glfw
     glfwInit();
+
+    // platform specific window hints
+    #ifdef _WIN32
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+    #elif __APPLE__
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+    #endif
+
+    // common window hints
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // create a new window
@@ -70,10 +81,13 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
         return;
     }
 
+    int w_width, w_height;
     glViewport(0, 0, window_width, window_height);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glfwSwapInterval(1);
 
     InitScreenRenderData();
     InitQuadBatch();
@@ -507,7 +521,6 @@ uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 
     frame_buffer->width = width;
     frame_buffer->height = height;
