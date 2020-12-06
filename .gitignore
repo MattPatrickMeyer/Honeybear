@@ -3,3 +3,4 @@ Makefile_old
 .vscode/
 *.dll
 *.exe
+.DS_Store
