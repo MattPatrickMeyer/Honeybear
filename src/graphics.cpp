@@ -10,14 +10,14 @@
 using namespace Honeybear;
 
 std::unordered_map<std::string, uint32_t> Graphics::shaders;
-std::unordered_map<std::string, Texture> Graphics::textures;
+std::unordered_map<std::string, Graphics::Texture> Graphics::textures;
 std::map<uint8_t, uint32_t> Graphics::bound_textures;
 std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
 std::string Graphics::activated_shader_id = "default";
 GLFWwindow* Graphics::window;
-Graphics::QuadBatch Graphics::quad_batch;
+Graphics::Batch Graphics::batch;
 Graphics::ScreenRenderData Graphics::screen_render_data;
 
 std::map<uint8_t, GLenum> texture_units = 
@@ -35,6 +35,7 @@ std::map<uint8_t, GLenum> texture_units =
     { 10, GL_TEXTURE10 }
 };
 
+// todo: batching does more than just quads now, so rethink the following
 const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
@@ -90,7 +91,7 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
     glfwSwapInterval(1);
 
     InitScreenRenderData();
-    InitQuadBatch();
+    InitBatchRenderer();
 }
 
 void Graphics::InitScreenRenderData()
@@ -163,16 +164,19 @@ void Graphics::InitScreenRenderData()
     glBindVertexArray(0);
 }
 
-void Graphics::InitQuadBatch()
+void Graphics::InitBatchRenderer()
 {
-    // set up quad batch
-    quad_batch.buffer = new Vertex[max_vertex_count];
+    // set up batch
+    batch.buffer = new Vertex[max_vertex_count];
+    batch.index_buffer = new uint32_t[max_index_count];
+    batch.current_index_offset = 0;
+    batch.index_count = 0;
 
-    glGenVertexArrays(1, &quad_batch.VAO);
-    glBindVertexArray(quad_batch.VAO);
+    glGenVertexArrays(1, &batch.VAO);
+    glBindVertexArray(batch.VAO);
 
-    glGenBuffers(1, &quad_batch.VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, quad_batch.VBO);
+    glGenBuffers(1, &batch.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, batch.VBO);
     glBufferData(GL_ARRAY_BUFFER, max_vertex_count * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 
     // position
@@ -187,26 +191,23 @@ void Graphics::InitQuadBatch()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
 
-    // todo: this should just be set up once and reused
-    uint32_t indices[max_index_count];
-    uint32_t offset = 0;
-    for(size_t i = 0; i < max_index_count; i += 6)
-    {
-        indices[i + 0] = 0 + offset;
-        indices[i + 1] = 1 + offset;
-        indices[i + 2] = 3 + offset;
+    // set up index element buffer
+    glGenBuffers(1, &batch.IB);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.IB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, max_index_count * sizeof(uint32_t), nullptr, GL_STATIC_DRAW);
 
-        indices[i + 3] = 1 + offset;
-        indices[i + 4] = 2 + offset;
-        indices[i + 5] = 3 + offset;
+    // set up the dummy shape texture (it's just a 1x1 pixel white image)
+    glGenTextures(1, &batch.shape_texture);
+    glBindTexture(GL_TEXTURE_2D, batch.shape_texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    uint32_t colour = 0xffffffff;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &colour);
 
-        offset += 4;
-    }
-
-    glGenBuffers(1, &quad_batch.IB);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quad_batch.IB);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+    // unbind everything
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -338,7 +339,7 @@ void Graphics::ActivateShader(const std::string& shader_id, const glm::mat4& pro
 
 void Graphics::DeactivateShader()
 {
-    if(quad_batch.index_count > 0)
+    if(batch.index_count > 0)
     {
         EndBatch();
         FlushBatch();
@@ -361,9 +362,29 @@ void Graphics::SetMatrix4(const std::string& shader_id, const std::string& unifo
 void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type)
 {
     int width, height, nrChannels;
-    //stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
-    textures[texture_id].Generate(width, height, data, filter_type);
+
+    GLuint filter = GL_LINEAR;
+    if(filter_type == NEAREST) filter = GL_NEAREST;
+
+    Texture* texture = &textures[texture_id];
+
+    texture->width = width;
+    texture->height = height;
+    texture->internal_format = GL_RGBA;
+    texture->image_format = GL_RGBA;
+    texture->wrap_s = GL_REPEAT;
+    texture->wrap_t = GL_REPEAT;
+
+    glGenTextures(1, &texture->ID);
+    glBindTexture(GL_TEXTURE_2D, texture->ID);
+    glTexImage2D(GL_TEXTURE_2D, 0, texture->internal_format, width, height, 0, texture->image_format, GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture->wrap_s);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture->wrap_t);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     stbi_image_free(data);
 }
 
@@ -374,6 +395,14 @@ void Graphics::BindTexture(const std::string& texture_id, const uint8_t texture_
     glBindTexture(GL_TEXTURE_2D, ID);
 
     bound_textures[texture_unit] = ID;
+}
+
+void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
+{
+    glActiveTexture(texture_units[texture_unit]);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    bound_textures[texture_unit] = texture_id;
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index)
@@ -389,101 +418,195 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
 
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour)
 {
+    int indices_count = 6;
+
     if(frame_buffer_index != current_frame_buffer_index)
     {
         BindFrameBuffer(frame_buffer_index);
     }
 
-    bool start_new_batch = false;
-    bool bind_texture = false;
+    bool should_start_new_batch = false;
+    bool should_bind_texture = false;
+
     uint32_t texture_id = textures[sprite.texture_id].ID;
     if(bound_textures[0] != texture_id)
     {
-        start_new_batch = quad_batch.index_count > 0;
-        bind_texture = true;
+        should_start_new_batch = batch.index_count > 0;
+        should_bind_texture = true;
     }
 
-    if(quad_batch.index_count >= max_index_count)
+    if(batch.index_count + indices_count > max_index_count)
     {
-        start_new_batch = true;
+        should_start_new_batch = true;
     }
 
-    if(start_new_batch)
+    if(should_start_new_batch)
     {
         EndBatch();
         FlushBatch();
         BeginBatch();
     }
 
-    if(bind_texture)
+    if(should_bind_texture)
     {
         BindTexture(sprite.texture_id, 0);
     }
 
     // bottom right
-    quad_batch.buffer_ptr->position.x = position.x + sprite.width;
-    quad_batch.buffer_ptr->position.y = position.y + sprite.height;
-    quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
-    quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
-    quad_batch.buffer_ptr->colour = colour;
-    quad_batch.buffer_ptr++;
+    batch.buffer_ptr->position.x = position.x + sprite.width;
+    batch.buffer_ptr->position.y = position.y + sprite.height;
+    batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
+    batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
 
     // top right
-    quad_batch.buffer_ptr->position.x = position.x + sprite.width;
-    quad_batch.buffer_ptr->position.y = position.y;
-    quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
-    quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y;
-    quad_batch.buffer_ptr->colour = colour;
-    quad_batch.buffer_ptr++;
+    batch.buffer_ptr->position.x = position.x + sprite.width;
+    batch.buffer_ptr->position.y = position.y;
+    batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
+    batch.buffer_ptr->tex_coords.y = sprite.texture_y;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
 
     // top left
-    quad_batch.buffer_ptr->position.x = position.x;
-    quad_batch.buffer_ptr->position.y = position.y;
-    quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x;
-    quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y;
-    quad_batch.buffer_ptr->colour = colour;
-    quad_batch.buffer_ptr++;
+    batch.buffer_ptr->position.x = position.x;
+    batch.buffer_ptr->position.y = position.y;
+    batch.buffer_ptr->tex_coords.x = sprite.texture_x;
+    batch.buffer_ptr->tex_coords.y = sprite.texture_y;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
 
     // bottom left
-    quad_batch.buffer_ptr->position.x = position.x;
-    quad_batch.buffer_ptr->position.y = position.y + sprite.height;
-    quad_batch.buffer_ptr->tex_coords.x = sprite.texture_x;
-    quad_batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
-    quad_batch.buffer_ptr->colour = colour;
-    quad_batch.buffer_ptr++;
+    batch.buffer_ptr->position.x = position.x;
+    batch.buffer_ptr->position.y = position.y + sprite.height;
+    batch.buffer_ptr->tex_coords.x = sprite.texture_x;
+    batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
 
-    quad_batch.index_count += 6;
+    // first tri indices
+    batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 2] = 3 + batch.current_index_offset;
+
+    // second tri indices
+    batch.index_buffer[batch.index_count + 3] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 4] = 2 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 5] = 3 + batch.current_index_offset;
+
+    batch.current_index_offset += 4;
+    batch.index_count += indices_count;
+}
+
+void Graphics::DrawTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour)
+{
+    int indices_count = 3;
+
+    if(frame_buffer_index != current_frame_buffer_index)
+    {
+        BindFrameBuffer(frame_buffer_index);
+    }
+
+    bool should_start_new_batch = false;
+    bool should_bind_texture = false;
+
+    uint32_t texture_id = batch.shape_texture;
+    if(bound_textures[0] != texture_id)
+    {
+        should_start_new_batch = batch.index_count > 0;
+        should_bind_texture = true;
+    }
+
+    if(batch.index_count + indices_count > max_index_count)
+    {
+        should_start_new_batch = true;
+    }
+
+    if(should_start_new_batch)
+    {
+        EndBatch();
+        FlushBatch();
+        BeginBatch();
+    }
+
+    if(should_bind_texture)
+    {
+        BindTexture(batch.shape_texture, 0);
+    }
+
+    batch.buffer_ptr->position.x = pos_a.x;
+    batch.buffer_ptr->position.y = pos_a.y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    batch.buffer_ptr->position.x = pos_b.x;
+    batch.buffer_ptr->position.y = pos_b.y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    batch.buffer_ptr->position.x = pos_c.x;
+    batch.buffer_ptr->position.y = pos_c.y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 2] = 2 + batch.current_index_offset;
+
+    batch.current_index_offset += 3;
+    batch.index_count += indices_count;
 }
 
 void Graphics::BeginBatch()
 {
-    quad_batch.buffer_ptr = quad_batch.buffer;
+    batch.buffer_ptr = batch.buffer;
 }
 
 void Graphics::EndBatch()
 {
-    GLsizeiptr size = (uint8_t*)quad_batch.buffer_ptr - (uint8_t*)quad_batch.buffer;
-    glBindBuffer(GL_ARRAY_BUFFER, quad_batch.VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, size, quad_batch.buffer);
+    GLsizeiptr size = (uint8_t*)batch.buffer_ptr - (uint8_t*)batch.buffer;
+    glBindBuffer(GL_ARRAY_BUFFER, batch.VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, size, batch.buffer);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.IB);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, batch.index_count * sizeof(uint32_t), batch.index_buffer);
 }
 
 void Graphics::FlushBatch()
 {
-    glBindVertexArray(quad_batch.VAO);
-    glDrawElements(GL_TRIANGLES, quad_batch.index_count, GL_UNSIGNED_INT, nullptr);
-    quad_batch.index_count = 0;
+    glBindVertexArray(batch.VAO);
+    glDrawElements(GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
+    batch.index_count = 0;
+    batch.current_index_offset = 0;
     glBindVertexArray(0);
 }
 
 void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h)
 {
-    sprites[sprite_id].Init(texture_id, tex_x, tex_y, tex_w, tex_h);
+    sprites[sprite_id].texture_id = texture_id;
+    sprites[sprite_id].width = tex_w;
+    sprites[sprite_id].height = tex_h;
+
+    Texture* texture = &textures[texture_id];
+    float texture_width = texture->width;
+    float texture_height = texture->height;
+
+    sprites[sprite_id].texture_x = tex_x / texture_width;
+    sprites[sprite_id].texture_y = tex_y / texture_height;
+    sprites[sprite_id].texture_w = tex_w / texture_width;
+    sprites[sprite_id].texture_h = tex_h / texture_height;
 }
 
 void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 {
     // flush any batched quads to the previous frame buffer
-    if(quad_batch.index_count > 0)
+    if(batch.index_count > 0)
     {
         EndBatch();
         FlushBatch();
@@ -539,7 +662,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
 
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
-    if(quad_batch.index_count > 0)
+    if(batch.index_count > 0)
     {
         EndBatch();
         FlushBatch();

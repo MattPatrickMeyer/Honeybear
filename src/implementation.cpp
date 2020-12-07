@@ -13,17 +13,17 @@ Implementation::Implementation()
 {
     // int window_width = 2560;
     // int window_height = 1440;
-    // int window_width = 1920;
-    // int window_height = 1080;
-    int window_width = 1280;
-    int window_height = 720;
+    int window_width = 1920;
+    int window_height = 1080;
+    // int window_width = 1280;
+    // int window_height = 720;
     Engine::Init(window_width, window_height, "Honeybear!");
 
     Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     Graphics::LoadShader("test",    "res/shaders/default.vert", "res/shaders/test.frag");
 
-    Graphics::LoadTexture("sprites", "res/images/sprites.png", NEAREST);
-    Graphics::LoadTexture("ui",      "res/images/ui.png",      LINEAR);
+    Graphics::LoadTexture("sprites", "res/images/sprites.png", Graphics::NEAREST);
+    Graphics::LoadTexture("ui",      "res/images/ui.png",      Graphics::LINEAR);
 
     Graphics::CreateSprite(1, "sprites", 0,   96,  32, 32);
     Graphics::CreateSprite(2, "sprites", 0,   128, 32, 32);
@@ -59,6 +59,9 @@ void Implementation::Draw()
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, colour);
 
     Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100 + test, 100), ui_frame_buffer);
+
+    Graphics::DrawTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, colour);
+    Graphics::DrawTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, colour);
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

@@ -3,8 +3,6 @@
 
 #include <string>
 
-#include "texture.h"
-
 namespace Honeybear
 {
     struct Engine
