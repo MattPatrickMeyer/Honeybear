@@ -1,3 +1,4 @@
+#include <math.h>
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -419,38 +420,9 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour)
 {
     int indices_count = 6;
-
-    if(frame_buffer_index != current_frame_buffer_index)
-    {
-        BindFrameBuffer(frame_buffer_index);
-    }
-
-    bool should_start_new_batch = false;
-    bool should_bind_texture = false;
-
     uint32_t texture_id = textures[sprite.texture_id].ID;
-    if(bound_textures[0] != texture_id)
-    {
-        should_start_new_batch = batch.index_count > 0;
-        should_bind_texture = true;
-    }
 
-    if(batch.index_count + indices_count > max_index_count)
-    {
-        should_start_new_batch = true;
-    }
-
-    if(should_start_new_batch)
-    {
-        EndBatch();
-        FlushBatch();
-        BeginBatch();
-    }
-
-    if(should_bind_texture)
-    {
-        BindTexture(sprite.texture_id, 0);
-    }
+    DoBatchRenderSetUp(frame_buffer_index, texture_id, indices_count);
 
     // bottom right
     batch.buffer_ptr->position.x = position.x + sprite.width;
@@ -498,41 +470,11 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     batch.index_count += indices_count;
 }
 
-void Graphics::DrawTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour)
 {
     int indices_count = 3;
 
-    if(frame_buffer_index != current_frame_buffer_index)
-    {
-        BindFrameBuffer(frame_buffer_index);
-    }
-
-    bool should_start_new_batch = false;
-    bool should_bind_texture = false;
-
-    uint32_t texture_id = batch.shape_texture;
-    if(bound_textures[0] != texture_id)
-    {
-        should_start_new_batch = batch.index_count > 0;
-        should_bind_texture = true;
-    }
-
-    if(batch.index_count + indices_count > max_index_count)
-    {
-        should_start_new_batch = true;
-    }
-
-    if(should_start_new_batch)
-    {
-        EndBatch();
-        FlushBatch();
-        BeginBatch();
-    }
-
-    if(should_bind_texture)
-    {
-        BindTexture(batch.shape_texture, 0);
-    }
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
     batch.buffer_ptr->position.x = pos_a.x;
     batch.buffer_ptr->position.y = pos_a.y;
@@ -563,6 +505,59 @@ void Graphics::DrawTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, cons
     batch.index_count += indices_count;
 }
 
+void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour)
+{
+    // -----------------------------
+    // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
+    float error = 0.5f;
+    float th = std::acos(2 * ((1 - error / radius) * (1 - error / radius)) - 1);
+    int number_of_sides = std::ceil(2 * M_PI / th);
+    // -----------------------------
+
+    float angle_per_side = 360.0f / number_of_sides;
+
+    int indices_count = number_of_sides * 3;
+
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
+
+    // center
+    batch.buffer_ptr->position.x = pos.x;
+    batch.buffer_ptr->position.y = pos.y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // all the others
+    for(size_t i = 0; i < number_of_sides; ++i)
+    {
+        float degrees = i * angle_per_side;
+
+        float radians = degrees * (M_PI / 180.0f);
+
+        batch.buffer_ptr->position.x = pos.x + std::cos(radians) * radius;
+        batch.buffer_ptr->position.y = pos.y + std::sin(radians) * radius;
+        batch.buffer_ptr->tex_coords.x = 0.0f;
+        batch.buffer_ptr->tex_coords.y = 0.0f;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+
+        batch.index_buffer[batch.index_count + 0] = batch.current_index_offset + 0;
+        batch.index_buffer[batch.index_count + 1] = batch.current_index_offset + 1 * i;
+        batch.index_buffer[batch.index_count + 2] = batch.current_index_offset + 1 * (i + 1);
+
+        batch.index_count += 3;
+    }
+
+    batch.index_buffer[batch.index_count + 0] = batch.current_index_offset + 0;
+    batch.index_buffer[batch.index_count + 1] = batch.current_index_offset + number_of_sides;
+    batch.index_buffer[batch.index_count + 2] = batch.current_index_offset + 1;
+
+    batch.index_count += 3;
+
+    batch.current_index_offset += number_of_sides + 1;
+}
+
 void Graphics::BeginBatch()
 {
     batch.buffer_ptr = batch.buffer;
@@ -585,6 +580,41 @@ void Graphics::FlushBatch()
     batch.index_count = 0;
     batch.current_index_offset = 0;
     glBindVertexArray(0);
+}
+
+void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices)
+{
+    if(frame_buffer_index != current_frame_buffer_index)
+    {
+        BindFrameBuffer(frame_buffer_index);
+    }
+
+    bool should_start_new_batch = false;
+    bool should_bind_texture = false;
+
+    //uint32_t texture_id = batch.shape_texture;
+    if(bound_textures[0] != tex_id)
+    {
+        should_start_new_batch = batch.index_count > 0;
+        should_bind_texture = true;
+    }
+
+    if(batch.index_count + num_indices > max_index_count)
+    {
+        should_start_new_batch = true;
+    }
+
+    if(should_start_new_batch)
+    {
+        EndBatch();
+        FlushBatch();
+        BeginBatch();
+    }
+
+    if(should_bind_texture)
+    {
+        BindTexture(tex_id, 0);
+    }
 }
 
 void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h)

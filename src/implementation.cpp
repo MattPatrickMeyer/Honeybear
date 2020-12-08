@@ -60,8 +60,13 @@ void Implementation::Draw()
 
     Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100 + test, 100), ui_frame_buffer);
 
-    Graphics::DrawTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, colour);
-    Graphics::DrawTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, colour);
+    Graphics::FillTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, colour);
+    colour.r = 0;
+    colour.g = 1.0f;
+    Graphics::FillTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, colour);
+
+    Graphics::FillCircle(glm::vec2(300.0f, 300.0f), 50.0f, another_test_frame_buffer, colour);
+
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

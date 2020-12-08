@@ -116,7 +116,8 @@ namespace Honeybear
         void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index);
         void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour);
 
-        void DrawTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour);
+        void FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour);
+        void FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour);
 
         //uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(uint32_t width, uint32_t height);
@@ -127,6 +128,7 @@ namespace Honeybear
         void BeginBatch();
         void EndBatch();
         void FlushBatch();
+        void DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices);
     }
 };
 
