@@ -17,7 +17,9 @@ Implementation::Implementation()
     int window_height = 1080;
     // int window_width = 1280;
     // int window_height = 720;
+
     Engine::Init(window_width, window_height, "Honeybear!");
+    Engine::SetGameSize(640, 360);
 
     Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     Graphics::LoadShader("test",    "res/shaders/default.vert", "res/shaders/test.frag");
@@ -64,7 +66,7 @@ void Implementation::Draw()
     Graphics::FillCircle(glm::vec2(300.0f, 300.0f), 50.0f, another_test_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::FillCircle(glm::vec2(400.0f, 200.0f), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-    Graphics::FillRectangle(500.0f, 500.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+    Graphics::FillRectangle(500.0f, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

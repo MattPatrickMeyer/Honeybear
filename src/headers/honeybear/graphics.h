@@ -120,10 +120,10 @@ namespace Honeybear
         void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const glm::vec4& colour);
         void FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour);
 
-        //uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(uint32_t width, uint32_t height);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
+        glm::vec2 GetScaledFrameBufferPixelSize(const uint32_t frame_buffer_index);
 
         void InitBatchRenderer();
         void BeginBatch();

@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "graphics.h"
+#include "engine.h"
 #include "stb_image.h"
 
 using namespace Honeybear;
@@ -418,6 +419,15 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     DrawSprite(sprite, position, frame_buffer_index, colour);
 }
 
+glm::vec2 Graphics::GetScaledFrameBufferPixelSize(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    return glm::vec2(
+        frame_buffer->width / game_width,
+        frame_buffer->height / game_height
+    );
+}
+
 void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour)
 {
     int indices_count = 6;
@@ -425,33 +435,35 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
 
     DoBatchRenderSetUp(frame_buffer_index, texture_id, indices_count);
 
+    glm::vec2 pixel_size = GetScaledFrameBufferPixelSize(frame_buffer_index);
+
     // bottom right
-    batch.buffer_ptr->position.x = position.x + sprite.width;
-    batch.buffer_ptr->position.y = position.y + sprite.height;
+    batch.buffer_ptr->position.x = (position.x + sprite.width) * pixel_size.x;
+    batch.buffer_ptr->position.y = (position.y + sprite.height) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top right
-    batch.buffer_ptr->position.x = position.x + sprite.width;
-    batch.buffer_ptr->position.y = position.y;
+    batch.buffer_ptr->position.x = (position.x + sprite.width) * pixel_size.x;
+    batch.buffer_ptr->position.y = (position.y) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top left
-    batch.buffer_ptr->position.x = position.x;
-    batch.buffer_ptr->position.y = position.y;
+    batch.buffer_ptr->position.x = (position.x) * pixel_size.x;
+    batch.buffer_ptr->position.y = (position.y) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // bottom left
-    batch.buffer_ptr->position.x = position.x;
-    batch.buffer_ptr->position.y = position.y + sprite.height;
+    batch.buffer_ptr->position.x = (position.x) * pixel_size.x;
+    batch.buffer_ptr->position.y = (position.y + sprite.height) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
@@ -477,22 +489,24 @@ void Graphics::FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, cons
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
-    batch.buffer_ptr->position.x = pos_a.x;
-    batch.buffer_ptr->position.y = pos_a.y;
+    glm::vec2 pixel_size = GetScaledFrameBufferPixelSize(frame_buffer_index);
+
+    batch.buffer_ptr->position.x = pos_a.x * pixel_size.x;
+    batch.buffer_ptr->position.y = pos_a.y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
-    batch.buffer_ptr->position.x = pos_b.x;
-    batch.buffer_ptr->position.y = pos_b.y;
+    batch.buffer_ptr->position.x = pos_b.x * pixel_size.x;
+    batch.buffer_ptr->position.y = pos_b.y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
-    batch.buffer_ptr->position.x = pos_c.x;
-    batch.buffer_ptr->position.y = pos_c.y;
+    batch.buffer_ptr->position.x = pos_c.x * pixel_size.x;
+    batch.buffer_ptr->position.y = pos_c.y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
@@ -512,33 +526,35 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
+    glm::vec2 pixel_size = GetScaledFrameBufferPixelSize(frame_buffer_index);
+
     // bottom right
-    batch.buffer_ptr->position.x = x + w;
-    batch.buffer_ptr->position.y = y + h;
+    batch.buffer_ptr->position.x = (x + w) * pixel_size.x;
+    batch.buffer_ptr->position.y = (y + h) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top right
-    batch.buffer_ptr->position.x = x + w;
-    batch.buffer_ptr->position.y = y;
+    batch.buffer_ptr->position.x = (x + w) * pixel_size.x;
+    batch.buffer_ptr->position.y = y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top left
-    batch.buffer_ptr->position.x = x;
-    batch.buffer_ptr->position.y = y;
+    batch.buffer_ptr->position.x = x * pixel_size.x;
+    batch.buffer_ptr->position.y = y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // bottom left
-    batch.buffer_ptr->position.x = x;
-    batch.buffer_ptr->position.y = y + h;
+    batch.buffer_ptr->position.x = x * pixel_size.x;
+    batch.buffer_ptr->position.y = (y + h) * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
@@ -560,10 +576,12 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
 
 void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour)
 {
+    glm::vec2 pixel_size = GetScaledFrameBufferPixelSize(frame_buffer_index);
+
     // -----------------------------
     // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
-    float error = 0.5f;
-    float th = std::acos(2 * ((1 - error / radius) * (1 - error / radius)) - 1);
+    float error = 0.25f;
+    float th = std::acos(2 * ((1 - error / (radius * pixel_size.x)) * (1 - error / (radius * pixel_size.x))) - 1);
     int number_of_sides = std::ceil(2 * M_PI / th);
     // -----------------------------
 
@@ -574,8 +592,8 @@ void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
     // center
-    batch.buffer_ptr->position.x = pos.x;
-    batch.buffer_ptr->position.y = pos.y;
+    batch.buffer_ptr->position.x = pos.x * pixel_size.x;
+    batch.buffer_ptr->position.y = pos.y * pixel_size.y;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
@@ -588,8 +606,8 @@ void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32
 
         float radians = degrees * (M_PI / 180.0f);
 
-        batch.buffer_ptr->position.x = pos.x + std::cos(radians) * radius;
-        batch.buffer_ptr->position.y = pos.y + std::sin(radians) * radius;
+        batch.buffer_ptr->position.x = (pos.x + std::cos(radians) * radius) * pixel_size.x;
+        batch.buffer_ptr->position.y = (pos.y + std::sin(radians) * radius) * pixel_size.y;
         batch.buffer_ptr->tex_coords.x = 0.0f;
         batch.buffer_ptr->tex_coords.y = 0.0f;
         batch.buffer_ptr->colour = colour;

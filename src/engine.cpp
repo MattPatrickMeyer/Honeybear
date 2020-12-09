@@ -8,10 +8,15 @@
 
 using namespace Honeybear;
 
+float Honeybear::game_width;
+float Honeybear::game_height;
+
 const float MAX_TIME_STEP = 1.0f / 240.0f;
 
 void Engine::Init(int window_width, int window_height, const std::string& window_title)
 {
+    game_width = window_width;
+    game_height = window_height;
     Graphics::Init(window_width, window_height, window_title);
 }
 
@@ -73,4 +78,10 @@ void Engine::ProcessInput()
     {
         glfwSetWindowShouldClose(Graphics::window, true);
     }
+}
+
+void Engine::SetGameSize(const float w, const float h)
+{
+    game_width = w;
+    game_height = h;
 }
