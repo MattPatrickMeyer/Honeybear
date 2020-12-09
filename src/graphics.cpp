@@ -89,6 +89,7 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // vsync
     glfwSwapInterval(1);
 
     InitScreenRenderData();
@@ -502,6 +503,58 @@ void Graphics::FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, cons
     batch.index_buffer[batch.index_count + 2] = 2 + batch.current_index_offset;
 
     batch.current_index_offset += 3;
+    batch.index_count += indices_count;
+}
+
+void Graphics::FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const glm::vec4& colour)
+{
+    int indices_count = 6;
+
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
+
+    // bottom right
+    batch.buffer_ptr->position.x = x + w;
+    batch.buffer_ptr->position.y = y + h;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // top right
+    batch.buffer_ptr->position.x = x + w;
+    batch.buffer_ptr->position.y = y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // top left
+    batch.buffer_ptr->position.x = x;
+    batch.buffer_ptr->position.y = y;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // bottom left
+    batch.buffer_ptr->position.x = x;
+    batch.buffer_ptr->position.y = y + h;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // first tri indices
+    batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 2] = 3 + batch.current_index_offset;
+
+    // second tri indices
+    batch.index_buffer[batch.index_count + 3] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 4] = 2 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 5] = 3 + batch.current_index_offset;
+
+    batch.current_index_offset += 4;
     batch.index_count += indices_count;
 }
 

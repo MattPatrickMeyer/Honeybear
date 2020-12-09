@@ -52,21 +52,19 @@ void Implementation::Draw()
         }
     }
 
-    glm::vec4 colour(1.0f, 0.0f, 0.0f, 1.0f);
-
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, colour);
+    Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
     Graphics::DrawSprite(Graphics::sprites[4], glm::vec2(100 + test, 100), ui_frame_buffer);
 
-    Graphics::FillTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, colour);
-    colour.r = 0;
-    colour.g = 1.0f;
-    Graphics::FillTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, colour);
+    Graphics::FillTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    Graphics::FillTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::FillCircle(glm::vec2(300.0f, 300.0f), 50.0f, another_test_frame_buffer, colour);
+    Graphics::FillCircle(glm::vec2(300.0f, 300.0f), 50.0f, another_test_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::FillCircle(glm::vec2(400.0f, 200.0f), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
+    Graphics::FillRectangle(500.0f, 500.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);
