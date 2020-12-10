@@ -623,6 +623,39 @@ void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32
     batch.current_index_offset += number_of_sides + 1;
 }
 
+void Graphics::FillConvexPoly(const std::vector<glm::vec2>& points, const uint32_t frame_buffer_index, const glm::vec4& colour)
+{
+    int tri_count = points.size() - 2;
+    int indices_count = tri_count * 3;
+
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
+
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    // set up vertices
+    for(size_t i = 0; i < points.size(); ++i)
+    {
+        batch.buffer_ptr->position.x = points[i].x * pixel_size;
+        batch.buffer_ptr->position.y = points[i].y * pixel_size;
+        batch.buffer_ptr->tex_coords.x = 0.0f;
+        batch.buffer_ptr->tex_coords.y = 0.0f;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+    }
+
+    // set up indices
+    for(size_t i = 0; i < tri_count; ++i)
+    {
+        batch.index_buffer[batch.index_count + 0] = batch.current_index_offset + 0;
+        batch.index_buffer[batch.index_count + 1] = batch.current_index_offset + i + 1;
+        batch.index_buffer[batch.index_count + 2] = batch.current_index_offset + i + 2;
+
+        batch.index_count += 3;
+    }
+
+    batch.current_index_offset += points.size();
+}
+
 void Graphics::BeginBatch()
 {
     batch.buffer_ptr = batch.buffer;

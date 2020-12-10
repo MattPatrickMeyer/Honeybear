@@ -73,9 +73,23 @@ void Implementation::Draw()
     Graphics::FillTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
     Graphics::FillCircle(glm::vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::FillCircle(glm::vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    //Graphics::FillCircle(glm::vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
     Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+
+    std::vector<glm::vec2> points;
+    points.emplace_back(0.0f, 0.0f);
+    points.emplace_back(50.0f, 50.0f);
+    points.emplace_back(40.0f, 75.0f);
+    points.emplace_back(0.0f, 100.0f);
+    points.emplace_back(-50.0f, 50.0f);
+    for(size_t i = 0; i < points.size(); ++i)
+    {
+        points[i].x += x_pos;
+        points[i].y += y_pos;
+    }
+
+    Graphics::FillConvexPoly(points, another_test_frame_buffer, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);
