@@ -72,6 +72,7 @@ namespace Honeybear
             GLuint tex_colour_buffer;
             float width;
             float height;
+            float game_pixel_size;
         };
 
         struct ScreenRenderData
@@ -123,7 +124,6 @@ namespace Honeybear
         uint32_t AddFrameBuffer(uint32_t width, uint32_t height);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
-        glm::vec2 GetScaledFrameBufferPixelSize(const uint32_t frame_buffer_index);
 
         void InitBatchRenderer();
         void BeginBatch();

@@ -1,5 +1,6 @@
 #include "implementation.h"
 #include "honeybear/graphics.h"
+#include "honeybear/input.h"
 
 using namespace Honeybear;
 
@@ -37,9 +38,14 @@ Implementation::Implementation()
     ui_frame_buffer =           Graphics::AddFrameBuffer(window_width, window_height);
 }
 
+bool key_down = false;
+
 void Implementation::Update(const float dt)
 {
-    test += 50.0f * dt;
+    if(key_down)
+    {
+        test += 10.0f * dt;
+    }
 }
 
 void Implementation::Draw()
@@ -54,6 +60,9 @@ void Implementation::Draw()
         }
     }
 
+    double x_pos, y_pos;
+    Input::CursorGamePosition(Graphics::window, &x_pos, &y_pos);
+
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], glm::vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
@@ -63,12 +72,24 @@ void Implementation::Draw()
     Graphics::FillTriangle(glm::vec2(100.0f, 100.0f), glm::vec2(150.0f, 150.0f), glm::vec2(50.0f, 150.0f), ui_frame_buffer, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::FillTriangle(glm::vec2(200.0f, 200.0f), glm::vec2(250.0f, 250.0f), glm::vec2(150.0f, 250.0f), ui_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::FillCircle(glm::vec2(300.0f, 300.0f), 50.0f, another_test_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::FillCircle(glm::vec2(400.0f, 200.0f), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+    Graphics::FillCircle(glm::vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::FillCircle(glm::vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-    Graphics::FillRectangle(500.0f, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
+    Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, glm::vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
     Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);
     Graphics::RenderFrameBuffer(ui_frame_buffer);
+}
+
+void Implementation::HandleInput()
+{
+    if(Input::IsKeyHeld(Input::D_KEY))
+    {
+        key_down = true;
+    }
+    else
+    {
+        key_down = false;
+    }
 }

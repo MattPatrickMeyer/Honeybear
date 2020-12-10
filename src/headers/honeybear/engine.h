@@ -19,6 +19,7 @@ namespace Honeybear
 
         virtual void Draw() = 0;
         virtual void Update(const float dt) = 0;
+        virtual void HandleInput() = 0;
 
         protected:
             void SetGameSize(const float w, const float h);

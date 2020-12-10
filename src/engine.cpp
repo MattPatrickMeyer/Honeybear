@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "engine.h"
 #include "graphics.h"
+#include "input.h"
 
 using namespace Honeybear;
 
@@ -18,6 +19,7 @@ void Engine::Init(int window_width, int window_height, const std::string& window
     game_width = window_width;
     game_height = window_height;
     Graphics::Init(window_width, window_height, window_title);
+    Input::Init();
 }
 
 void Engine::Run()
@@ -50,6 +52,7 @@ void Engine::Run()
 
         Render();
 
+        Input::BeginNewFrame();
         glfwPollEvents();
     }
 
@@ -74,10 +77,12 @@ void Engine::Render()
 
 void Engine::ProcessInput()
 {
-    if(glfwGetKey(Graphics::window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if(Input::WasKeyPressed(Input::ESC_KEY))
     {
         glfwSetWindowShouldClose(Graphics::window, true);
     }
+
+    HandleInput();
 }
 
 void Engine::SetGameSize(const float w, const float h)

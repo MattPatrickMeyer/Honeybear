@@ -8,6 +8,7 @@ struct Implementation : public Honeybear::Engine
     Implementation();
     void Draw();
     void Update(const float dt);
+    void HandleInput();
 }; 
 
 #endif
