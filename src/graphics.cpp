@@ -85,13 +85,10 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
         return;
     }
 
-    int w_width, w_height;
     glViewport(0, 0, window_width, window_height);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    //glEnable(GL_POLYGON_SMOOTH);
 
     // vsync
     //glfwSwapInterval(1);
@@ -105,17 +102,16 @@ void Graphics::InitScreenRenderData()
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
 
+    screen_render_data.width = window_width;
+    screen_render_data.height = window_height;
+
     glGenVertexArrays(1, &screen_render_data.quad_VAO);
     glBindVertexArray(screen_render_data.quad_VAO);
 
     glGenBuffers(1, &screen_render_data.quad_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, screen_render_data.quad_VBO);
 
-    glm::vec4 colour;
-    colour.r = 1.0f;
-    colour.g = 1.0f;
-    colour.b = 1.0f;
-    colour.a = 1.0f;
+    glm::vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
 
     Vertex buffer[4];
     // bottom right
@@ -168,6 +164,47 @@ void Graphics::InitScreenRenderData()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+void Graphics::UpdateScreenRenderData()
+{
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+
+    screen_render_data.width = window_width;
+    screen_render_data.height = window_height;
+
+    glm::vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Vertex buffer[4];
+    // bottom right
+    buffer[0].position.x = window_width;
+    buffer[0].position.y = window_height;
+    buffer[0].tex_coords.x = 1.0f;
+    buffer[0].tex_coords.y = 1.0f;
+    buffer[0].colour = colour;
+    // top right
+    buffer[1].position.x = window_width;
+    buffer[1].position.y = 0.0f;
+    buffer[1].tex_coords.x = 1.0f;
+    buffer[1].tex_coords.y = 0.0f;
+    buffer[1].colour = colour;
+    // top left
+    buffer[2].position.x = 0.0f;
+    buffer[2].position.y = 0.0f;
+    buffer[2].tex_coords.x = 0.0f;
+    buffer[2].tex_coords.y = 0.0f;
+    buffer[2].colour = colour;
+    // bottom left
+    buffer[3].position.x = 0.0f;
+    buffer[3].position.y = window_height;
+    buffer[3].tex_coords.x = 0.0f;
+    buffer[3].tex_coords.y = 1.0f;
+    buffer[3].colour = colour;
+
+    glBindBuffer(GL_ARRAY_BUFFER, screen_render_data.quad_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Graphics::InitBatchRenderer()
@@ -753,9 +790,15 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
     SetShaderProjection(activated_shader_id, projection);
 }
 
-uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
+uint32_t Graphics::AddFrameBuffer()
 {
-    //FrameBuffer frame_buffer;
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    return AddFrameBuffer(window_width, window_height, true);
+}
+
+uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution)
+{
     frame_buffers.push_back(FrameBuffer());
     uint32_t frame_buffer_index = frame_buffers.size() - 1;
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
@@ -777,6 +820,7 @@ uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
     frame_buffer->width = width;
     frame_buffer->height = height;
     frame_buffer->game_pixel_size = width / Honeybear::game_width;
+    frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
 
     // if this is the first frame buffer, bind it?
     if(frame_buffer_index == 0)
@@ -785,6 +829,29 @@ uint32_t Graphics::AddFrameBuffer(uint32_t width, uint32_t height)
     }
 
     return frame_buffer_index;
+}
+
+void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+
+    // delete the existing FBO texture
+    glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+    glGenTextures(1, &frame_buffer->tex_colour_buffer);
+    glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    frame_buffer->width = width;
+    frame_buffer->height = height;
+    frame_buffer->game_pixel_size = width / Honeybear::game_width;
 }
 
 void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
@@ -811,4 +878,36 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glBindVertexArray(screen_render_data.quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+}
+
+void Graphics::ChangeResolution(const uint32_t width, const uint32_t height)
+{
+    // change the window size
+    glfwSetWindowSize(window, width, height);
+
+    // center the window
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    glfwSetWindowPos(window, mode->width / 2 - width / 2, mode->height / 2 - height / 2);
+
+    glViewport(0, 0, width, height);
+
+    // update every framebuffer that is mapped to size of the window
+    for(size_t i = 0; i < frame_buffers.size(); ++i)
+    {
+        if(frame_buffers[i].mapped_to_window_resolution)
+        {
+            UpdateFrameBufferSize(i, width, height);
+        }
+    }
+
+    // update the quad VAO that is used for rendering framebuffers to the screen
+    UpdateScreenRenderData();
+}
+
+void Graphics::ToggleFullscreen()
+{
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    glfwSetWindowMonitor(window, monitor, 0, 0, screen_render_data.width, screen_render_data.height, mode->refreshRate);
 }

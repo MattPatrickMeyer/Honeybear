@@ -73,6 +73,7 @@ namespace Honeybear
             float width;
             float height;
             float game_pixel_size;
+            bool mapped_to_window_resolution;
         };
 
         struct ScreenRenderData
@@ -80,6 +81,9 @@ namespace Honeybear
             GLuint quad_VAO;
             GLuint quad_VBO;
             GLuint quad_IB;
+
+            int width;
+            int height;
         };
 
         extern std::unordered_map<std::string, uint32_t> shaders;
@@ -97,10 +101,15 @@ namespace Honeybear
         extern ScreenRenderData screen_render_data;
 
         void Init(uint32_t window_width, uint32_t window_height, const std::string& window_title);
-        void InitScreenRenderData();
         void Clear();
         void ClearFrameBuffers();
         void SwapBuffers();
+
+        void InitScreenRenderData();
+        void UpdateScreenRenderData();
+
+        void ChangeResolution(const uint32_t width, const uint32_t height);
+        void ToggleFullscreen();
 
         void LoadShader(const std::string& shader_id, const std::string& vertex_file_name, const std::string& fragment_file_name);
         void ActivateShader(const std::string& shader_id);
@@ -122,9 +131,11 @@ namespace Honeybear
         void FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour);
         void FillConvexPoly(const std::vector<glm::vec2>& points, const uint32_t frame_buffer_index, const glm::vec4& colour);
 
-        uint32_t AddFrameBuffer(uint32_t width, uint32_t height);
+        uint32_t AddFrameBuffer();
+        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution = false);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
+        void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
 
         void InitBatchRenderer();
         void BeginBatch();

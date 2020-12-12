@@ -33,9 +33,9 @@ Implementation::Implementation()
     Graphics::CreateSprite(3, "sprites", 448, 128, 32, 32);
     Graphics::CreateSprite(4, "ui",      0,   160, 16, 16);
 
-    test_frame_buffer =         Graphics::AddFrameBuffer(window_width, window_height);
-    another_test_frame_buffer = Graphics::AddFrameBuffer(window_width, window_height);
-    ui_frame_buffer =           Graphics::AddFrameBuffer(window_width, window_height);
+    test_frame_buffer =         Graphics::AddFrameBuffer();
+    another_test_frame_buffer = Graphics::AddFrameBuffer();
+    ui_frame_buffer =           Graphics::AddFrameBuffer();
 }
 
 bool key_down = false;
@@ -105,5 +105,21 @@ void Implementation::HandleInput()
     else
     {
         key_down = false;
+    }
+    if(Input::WasKeyPressed(Input::KEY_F1))
+    {
+        Graphics::ChangeResolution(1280, 720);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F2))
+    {
+        Graphics::ChangeResolution(1920, 1080);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F3))
+    {
+        Graphics::ChangeResolution(2560, 1440);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F12))
+    {
+        Graphics::ToggleFullscreen();
     }
 }
