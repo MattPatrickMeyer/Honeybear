@@ -77,7 +77,7 @@ void Engine::Render()
 
 void Engine::ProcessInput()
 {
-    if(Input::WasKeyPressed(Input::ESC_KEY))
+    if(Input::WasKeyPressed(Input::KEY_ESC))
     {
         glfwSetWindowShouldClose(Graphics::window, true);
     }

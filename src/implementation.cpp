@@ -98,7 +98,7 @@ void Implementation::Draw()
 
 void Implementation::HandleInput()
 {
-    if(Input::IsKeyHeld(Input::D_KEY))
+    if(Input::IsKeyHeld(Input::KEY_D))
     {
         key_down = true;
     }
