@@ -392,6 +392,7 @@ void Graphics::DeactivateShader()
     {
         EndBatch();
         FlushBatch();
+        BeginBatch();
     }
 
     ActivateShader("default");
@@ -399,13 +400,37 @@ void Graphics::DeactivateShader()
 
 void Graphics::SetShaderProjection(const std::string& shader_id, const glm::mat4& projection)
 {
-    Graphics::SetMatrix4(shader_id, "projection", projection);
+    Graphics::SetShaderMatrix4(shader_id, "projection", projection);
 }
 
-void Graphics::SetMatrix4(const std::string& shader_id, const std::string& uniform_name, const glm::mat4& matrix)
+void Graphics::SetShaderMatrix4(const std::string& shader_id, const std::string& uniform_name, const glm::mat4& matrix)
 {
     uint32_t program_ID = shaders[shader_id];
     glUniformMatrix4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), 1, false, glm::value_ptr(matrix));
+}
+
+void Graphics::SetShaderFloat(const std::string& shader_id, const std::string& uniform_name, const float value)
+{
+    uint32_t program_ID = shaders[shader_id];
+    glUniform1f(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
+}
+
+void Graphics::SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const glm::vec2& value)
+{
+    uint32_t program_ID = shaders[shader_id];
+    glUniform2f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y);
+}
+
+void Graphics::SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const glm::vec3& value)
+{
+    uint32_t program_ID = shaders[shader_id];
+    glUniform3f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z);
+}
+
+void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const glm::vec4& value)
+{
+    uint32_t program_ID = shaders[shader_id];
+    glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.r, value.g, value.b, value.a);
 }
 
 // void Graphics::LoadFont(const std::string& font_id, const std::string& font_file_name)
