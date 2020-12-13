@@ -86,7 +86,6 @@ std::unordered_map<int, Input::Key> glfw_key_map =
     { GLFW_KEY_PAGE_DOWN,     Input::KEY_PAGE_DOWN },
     { GLFW_KEY_DELETE,        Input::KEY_DELETE },
     { GLFW_KEY_END,           Input::KEY_END }
-
 };
 
 void Input::Init()

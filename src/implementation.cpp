@@ -96,6 +96,9 @@ void Implementation::Draw()
     Graphics::RenderFrameBuffer(ui_frame_buffer);
 }
 
+bool full_screen = false;
+bool v_sync = false;
+
 void Implementation::HandleInput()
 {
     if(Input::IsKeyHeld(Input::KEY_D))
@@ -120,6 +123,12 @@ void Implementation::HandleInput()
     }
     if(Input::WasKeyPressed(Input::KEY_F12))
     {
-        Graphics::ToggleFullscreen();
+        full_screen = !full_screen;
+        Graphics::ToggleFullscreen(full_screen);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F10))
+    {
+        v_sync = !v_sync;
+        Graphics::ToggleVSync(v_sync);
     }
 }

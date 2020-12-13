@@ -109,7 +109,8 @@ namespace Honeybear
         void UpdateScreenRenderData();
 
         void ChangeResolution(const uint32_t width, const uint32_t height);
-        void ToggleFullscreen();
+        void ToggleFullscreen(const bool enabled);
+        void ToggleVSync(const bool enabled);
 
         void LoadShader(const std::string& shader_id, const std::string& vertex_file_name, const std::string& fragment_file_name);
         void ActivateShader(const std::string& shader_id);
@@ -121,6 +122,8 @@ namespace Honeybear
         void LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const std::string& texture_id, const uint8_t texture_unit);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
+
+        // void LoadFont(const std::string& font_id, const std::string& font_file_name);
 
         void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
         void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index);

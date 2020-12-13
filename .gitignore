@@ -7,3 +7,4 @@ Makefile_old
 main
 main.dSYM
 todo.txt
+*.ttf

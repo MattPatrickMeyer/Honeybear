@@ -9,6 +9,12 @@
 #include "engine.h"
 #include "stb_image.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+
 using namespace Honeybear;
 
 std::unordered_map<std::string, uint32_t> Graphics::shaders;
@@ -91,7 +97,7 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // vsync
-    //glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     InitScreenRenderData();
     InitBatchRenderer();
@@ -401,6 +407,10 @@ void Graphics::SetMatrix4(const std::string& shader_id, const std::string& unifo
     uint32_t program_ID = shaders[shader_id];
     glUniformMatrix4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), 1, false, glm::value_ptr(matrix));
 }
+
+// void Graphics::LoadFont(const std::string& font_id, const std::string& font_file_name)
+// {
+// }
 
 void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type)
 {
@@ -904,10 +914,20 @@ void Graphics::ChangeResolution(const uint32_t width, const uint32_t height)
     UpdateScreenRenderData();
 }
 
-void Graphics::ToggleFullscreen()
+void Graphics::ToggleFullscreen(const bool enabled)
 {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
-    glfwSetWindowMonitor(window, monitor, 0, 0, screen_render_data.width, screen_render_data.height, mode->refreshRate);
+    glfwSetWindowMonitor(window, enabled ? monitor : nullptr, 0, 0, screen_render_data.width, screen_render_data.height, mode->refreshRate);
+
+    // if(!enabled)
+    // {
+    //     glfwSetWindowPos(window, mode->width / 2 - screen_render_data.width / 2, mode->height / 2 - screen_render_data.height / 2);
+    // }
+}
+
+void Graphics::ToggleVSync(const bool enabled)
+{
+    glfwSwapInterval(enabled ? 1 : 0);
 }
