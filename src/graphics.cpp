@@ -375,7 +375,8 @@ void Graphics::LoadShader(const std::string& shader_id, const std::string& verte
 void Graphics::ActivateShader(const std::string& shader_id)
 {
     FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
-    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, frame_buffer->height, 0.0f, -1.0f, 1.0f);
+    //glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, frame_buffer->height, 0.0f, -1.0f, 1.0f);
+    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
     ActivateShader(shader_id, projection);
 }
 
@@ -415,6 +416,12 @@ void Graphics::SetShaderFloat(const std::string& shader_id, const std::string& u
     glUniform1f(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
 }
 
+void Graphics::SetShaderInt(const std::string& shader_id, const std::string& uniform_name, const int value)
+{
+    uint32_t program_ID = shaders[shader_id];
+    glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
+}
+
 void Graphics::SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const glm::vec2& value)
 {
     uint32_t program_ID = shaders[shader_id];
@@ -431,6 +438,13 @@ void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& un
 {
     uint32_t program_ID = shaders[shader_id];
     glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.r, value.g, value.b, value.a);
+}
+
+void Graphics::SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit)
+{
+    BindTexture(texture_id, texture_unit);
+    uint32_t program_ID = shaders[shader_id];
+    glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), texture_unit);
 }
 
 // void Graphics::LoadFont(const std::string& font_id, const std::string& font_file_name)
@@ -597,15 +611,15 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     // bottom right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
     batch.buffer_ptr->position.y = (y + h) * pixel_size;
-    batch.buffer_ptr->tex_coords.x = 0.0f;
-    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->tex_coords.x = 1.0f;
+    batch.buffer_ptr->tex_coords.y = 1.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
     batch.buffer_ptr->position.y = y * pixel_size;
-    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.x = 1.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
@@ -622,7 +636,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     batch.buffer_ptr->position.x = x * pixel_size;
     batch.buffer_ptr->position.y = (y + h) * pixel_size;
     batch.buffer_ptr->tex_coords.x = 0.0f;
-    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 1.0f;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
@@ -821,7 +835,7 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
     BeginBatch();
 
     // make sure the shader projection matrix is set up
-    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, frame_buffer->height, 0.0f, -1.0f, 1.0f);
+    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
     SetShaderProjection(activated_shader_id, projection);
 }
 
@@ -904,7 +918,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glfwGetWindowSize(window, &window_width, &window_height);
     glViewport(0, 0, window_width, window_height);
 
-    glm::mat4 projection = glm::ortho(0.0f, (float)window_width, 0.0f, (float)window_height, -1.0f, 1.0f);
+    glm::mat4 projection = glm::ortho(0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
     SetShaderProjection(activated_shader_id, projection);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
