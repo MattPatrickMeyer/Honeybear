@@ -918,6 +918,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glfwGetWindowSize(window, &window_width, &window_height);
     glViewport(0, 0, window_width, window_height);
 
+    // frame buffer textures are upside down, so use a projection that will flip them the right way
     glm::mat4 projection = glm::ortho(0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
     SetShaderProjection(activated_shader_id, projection);
 

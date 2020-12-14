@@ -8,6 +8,5 @@ uniform sampler2D second_image;
 
 void main()
 {    
-    vec4 test = texture(second_image, TexCoords);
-    FragColor = texture(image, TexCoords) * Colour * test;
+    FragColor = texture(second_image, TexCoords) * Colour;
 }
