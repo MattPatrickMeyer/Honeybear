@@ -497,14 +497,7 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
     bound_textures[texture_unit] = texture_id;
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index)
-{
-    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
-
-    DrawSprite(sprite, position, frame_buffer_index, colour);
-}
-
-void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = textures[sprite.texture_id].ID;
@@ -514,15 +507,15 @@ void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t fr
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
     // bottom right
-    batch.buffer_ptr->position.x = (position.x + sprite.width) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y + sprite.height) * pixel_size;
+    batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
+    batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
     batch.buffer_ptr++;
 
     // top right
-    batch.buffer_ptr->position.x = (position.x + sprite.width) * pixel_size;
+    batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
     batch.buffer_ptr->position.y = (position.y) * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
@@ -539,7 +532,7 @@ void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t fr
 
     // bottom left
     batch.buffer_ptr->position.x = (position.x) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y + sprite.height) * pixel_size;
+    batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
@@ -557,6 +550,11 @@ void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t fr
 
     batch.current_index_offset += 4;
     batch.index_count += indices_count;
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
 }
 
 void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour)

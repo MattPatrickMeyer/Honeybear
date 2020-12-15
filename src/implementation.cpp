@@ -68,7 +68,7 @@ void Implementation::Draw()
     Graphics::DrawSprite(Graphics::sprites[3], Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
     Graphics::DrawSprite(Graphics::sprites[3], Vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::DrawSprite(Graphics::sprites[4], Vec2(100 + test, 100), ui_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[4], Vec2(100 + test, 100), Vec2(5.0f, 5.0f), ui_frame_buffer);
 
     Graphics::FillTriangle(Vec2(100.0f, 100.0f), Vec2(150.0f, 150.0f), Vec2(50.0f, 150.0f), ui_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -96,7 +96,7 @@ void Implementation::Draw()
 
     Graphics::ActivateShader("second_tex_test");
     Graphics::SetShaderTexture("second_tex_test", "second_image", Graphics::frame_buffers[another_test_frame_buffer].tex_colour_buffer, 1);
-    Graphics::FillRectangle(200.0f, 0.0f, 100.0f, 100.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
     Graphics::DeactivateShader();
 
     Graphics::RenderFrameBuffer(test_frame_buffer);

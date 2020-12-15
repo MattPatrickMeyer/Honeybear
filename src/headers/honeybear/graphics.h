@@ -133,8 +133,8 @@ namespace Honeybear
         // void LoadFont(const std::string& font_id, const std::string& font_file_name);
 
         void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
-        void DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index);
-        void DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour);
+        void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
 
         void FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
