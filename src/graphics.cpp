@@ -1,4 +1,3 @@
-#include <math.h>
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -669,7 +668,7 @@ void Graphics::FillCircle(const Vec2& pos, const float radius, const uint32_t fr
     // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
     float error = 0.25f;
     float th = std::acos(2 * ((1 - error / (radius * pixel_size)) * (1 - error / (radius * pixel_size))) - 1);
-    int number_of_sides = std::ceil(2 * M_PI / th);
+    int number_of_sides = std::ceil(2 * PI / th);
     // -----------------------------
 
     float angle_per_side = 360.0f / number_of_sides;
@@ -691,7 +690,7 @@ void Graphics::FillCircle(const Vec2& pos, const float radius, const uint32_t fr
     {
         float degrees = i * angle_per_side;
 
-        float radians = degrees * (M_PI / 180.0f);
+        float radians = degrees * (PI / 180.0f);
 
         batch.buffer_ptr->position.x = (pos.x + std::cos(radians) * radius) * pixel_size;
         batch.buffer_ptr->position.y = (pos.y + std::sin(radians) * radius) * pixel_size;
