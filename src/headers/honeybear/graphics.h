@@ -5,9 +5,10 @@
 #include <map>
 #include <unordered_map>
 #include <string>
-#include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include "maths.h"
 
 namespace Honeybear
 {
@@ -45,9 +46,9 @@ namespace Honeybear
 
         struct Vertex
         {
-            glm::vec2 position;
-            glm::vec2 tex_coords;
-            glm::vec4 colour;
+            Vec2 position;
+            Vec2 tex_coords;
+            Vec4 colour;
         };
 
         struct Batch
@@ -114,17 +115,16 @@ namespace Honeybear
 
         void LoadShader(const std::string& shader_id, const std::string& vertex_file_name, const std::string& fragment_file_name);
         void ActivateShader(const std::string& shader_id);
-        void ActivateShader(const std::string& shader_id, const glm::mat4& projection);
         void DeactivateShader();
-        void SetShaderProjection(const std::string& shader_id, const glm::mat4& projection);
+
+        void SetShaderProjection(const std::string& shader_id, const float left, const float right, const float bottom, const float top, const float z_near, const float z_far);
 
         void SetShaderFloat(const std::string& shader_id, const std::string& uniform_name, const float value);
         void SetShaderInt(const std::string& shader_id, const std::string& uniform_name, const int value);
-        void SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const glm::vec2& value);
-        void SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const glm::vec3& value);
-        void SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const glm::vec4& value);
+        void SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const Vec2& value);
+        void SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const Vec3& value);
+        void SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value);
         void SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit);
-        void SetShaderMatrix4(const std::string& shader_id, const std::string& uniform_name, const glm::mat4& matrix);
 
         void LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const std::string& texture_id, const uint8_t texture_unit);
@@ -133,13 +133,13 @@ namespace Honeybear
         // void LoadFont(const std::string& font_id, const std::string& font_file_name);
 
         void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
-        void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index);
-        void DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour);
+        void DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index);
+        void DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour);
 
-        void FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour);
-        void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const glm::vec4& colour);
-        void FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour);
-        void FillConvexPoly(const std::vector<glm::vec2>& points, const uint32_t frame_buffer_index, const glm::vec4& colour);
+        void FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 
         uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution = false);

@@ -3,11 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <glm/gtc/type_ptr.hpp>
 
 #include "graphics.h"
 #include "engine.h"
-#include "stb_image.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -117,7 +115,7 @@ void Graphics::InitScreenRenderData()
     glGenBuffers(1, &screen_render_data.quad_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, screen_render_data.quad_VBO);
 
-    glm::vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
 
     Vertex buffer[4];
     // bottom right
@@ -180,7 +178,7 @@ void Graphics::UpdateScreenRenderData()
     screen_render_data.width = window_width;
     screen_render_data.height = window_height;
 
-    glm::vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
 
     Vertex buffer[4];
     // bottom right
@@ -375,15 +373,8 @@ void Graphics::LoadShader(const std::string& shader_id, const std::string& verte
 void Graphics::ActivateShader(const std::string& shader_id)
 {
     FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
-    //glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, frame_buffer->height, 0.0f, -1.0f, 1.0f);
-    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
-    ActivateShader(shader_id, projection);
-}
-
-void Graphics::ActivateShader(const std::string& shader_id, const glm::mat4& projection)
-{
     glUseProgram(shaders[shader_id]);
-    SetShaderProjection(shader_id, projection);
+    SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
     activated_shader_id = shader_id;
 }
 
@@ -399,15 +390,24 @@ void Graphics::DeactivateShader()
     ActivateShader("default");
 }
 
-void Graphics::SetShaderProjection(const std::string& shader_id, const glm::mat4& projection)
+void Graphics::SetShaderProjection(const std::string& shader_id, const float left, const float right, const float bottom, const float top, const float z_near, const float z_far)
 {
-    Graphics::SetShaderMatrix4(shader_id, "projection", projection);
-}
+    GLfloat matrix[] = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
 
-void Graphics::SetShaderMatrix4(const std::string& shader_id, const std::string& uniform_name, const glm::mat4& matrix)
-{
+    matrix[0] = 2.0f / (right - left);
+    matrix[5] = 2.0f / (top - bottom);
+    matrix[10] = - 2.0f / (z_far - z_near);
+    matrix[12] = - (right + left) / (right - left);
+    matrix[13] = - (top + bottom) / (top - bottom);
+    matrix[14] = - (z_far + z_near) / (z_far - z_near);
+
     uint32_t program_ID = shaders[shader_id];
-    glUniformMatrix4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), 1, false, glm::value_ptr(matrix));
+    glUniformMatrix4fv(glGetUniformLocation(program_ID, "projection"), 1, GL_FALSE, matrix);
 }
 
 void Graphics::SetShaderFloat(const std::string& shader_id, const std::string& uniform_name, const float value)
@@ -422,22 +422,22 @@ void Graphics::SetShaderInt(const std::string& shader_id, const std::string& uni
     glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
 }
 
-void Graphics::SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const glm::vec2& value)
+void Graphics::SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const Vec2& value)
 {
     uint32_t program_ID = shaders[shader_id];
     glUniform2f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y);
 }
 
-void Graphics::SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const glm::vec3& value)
+void Graphics::SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const Vec3& value)
 {
     uint32_t program_ID = shaders[shader_id];
     glUniform3f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z);
 }
 
-void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const glm::vec4& value)
+void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value)
 {
     uint32_t program_ID = shaders[shader_id];
-    glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.r, value.g, value.b, value.a);
+    glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z, value.w);
 }
 
 void Graphics::SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit)
@@ -497,18 +497,14 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
     bound_textures[texture_unit] = texture_id;
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index)
+void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index)
 {
-    glm::vec4 colour;
-    colour.r = 1.0f;
-    colour.g = 1.0f;
-    colour.b = 1.0f;
-    colour.a = 1.0f;
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
 
     DrawSprite(sprite, position, frame_buffer_index, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = textures[sprite.texture_id].ID;
@@ -563,7 +559,7 @@ void Graphics::DrawSprite(const Sprite& sprite, glm::vec2 position, const uint32
     batch.index_count += indices_count;
 }
 
-void Graphics::FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, const glm::vec2& pos_c, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 3;
 
@@ -600,7 +596,7 @@ void Graphics::FillTriangle(const glm::vec2& pos_a, const glm::vec2& pos_b, cons
     batch.index_count += indices_count;
 }
 
-void Graphics::FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
 
@@ -654,7 +650,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     batch.index_count += indices_count;
 }
 
-void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
@@ -709,7 +705,7 @@ void Graphics::FillCircle(const glm::vec2& pos, const float radius, const uint32
     batch.current_index_offset += number_of_sides + 1;
 }
 
-void Graphics::FillConvexPoly(const std::vector<glm::vec2>& points, const uint32_t frame_buffer_index, const glm::vec4& colour)
+void Graphics::FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int tri_count = points.size() - 2;
     int indices_count = tri_count * 3;
@@ -835,8 +831,7 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
     BeginBatch();
 
     // make sure the shader projection matrix is set up
-    glm::mat4 projection = glm::ortho(0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
-    SetShaderProjection(activated_shader_id, projection);
+    SetShaderProjection(activated_shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
 }
 
 uint32_t Graphics::AddFrameBuffer()
@@ -919,8 +914,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glViewport(0, 0, window_width, window_height);
 
     // frame buffer textures are upside down, so use a projection that will flip them the right way
-    glm::mat4 projection = glm::ortho(0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
-    SetShaderProjection(activated_shader_id, projection);
+    SetShaderProjection(activated_shader_id, 0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glActiveTexture(GL_TEXTURE0);
