@@ -46,6 +46,9 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
+const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nout vec2 TexCoords;\nout vec4 Colour;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
+const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
+
 void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::string& window_title)
 {
     // init glfw
@@ -99,6 +102,55 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     InitScreenRenderData();
     InitBatchRenderer();
+    InitDefaultShaders();
+}
+
+void Graphics::InitDefaultShaders()
+{
+    int success;
+    char infoLog[512];
+
+    // vertex shader compile and check
+    GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader_id, 1, &default_vert_shader, NULL);
+    glCompileShader(vertex_shader_id);
+
+    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &success);
+    if(!success)
+    {
+        glGetShaderInfoLog(vertex_shader_id, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // fragment shader compile and check
+    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader_id, 1, &default_frag_shader, NULL);
+    glCompileShader(fragment_shader_id);
+
+    glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &success);
+    if(!success)
+    {
+        glGetShaderInfoLog(fragment_shader_id, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // shader program link and check
+    GLuint program_id = glCreateProgram();
+    glAttachShader(program_id, vertex_shader_id);
+    glAttachShader(program_id, fragment_shader_id);
+    glLinkProgram(program_id);
+
+    glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+    if(!success)
+    {
+        glGetProgramInfoLog(program_id, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER_PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
+    }
+
+    glDeleteShader(vertex_shader_id);
+    glDeleteShader(fragment_shader_id);
+
+    shaders["default"] = program_id;
 }
 
 void Graphics::InitScreenRenderData()
@@ -284,7 +336,7 @@ void Graphics::SwapBuffers()
     glfwSwapBuffers(window);
 }
 
-void Graphics::LoadShader(const std::string& shader_id, const std::string& vertex_file_name, const std::string& fragment_file_name)
+void Graphics::LoadShader(const std::string& shader_id, const char* vertex_file_name, const char* fragment_file_name)
 {
     uint32_t program_id;
     uint32_t vertex_shader_id;
@@ -295,34 +347,41 @@ void Graphics::LoadShader(const std::string& shader_id, const std::string& verte
     const char* vertex_code;
     const char* fragment_code;
 
-    std::ifstream vertex_shader_file(vertex_file_name);
-    std::ifstream fragment_shader_file(fragment_file_name);
-
-    vertex_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    fragment_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    if(vertex_shader_file.is_open() && fragment_shader_file.is_open())
+    if(vertex_file_name == nullptr)
     {
-        std::stringstream vertex_shader_stream;
-        std::stringstream fragment_shader_stream;
-
-        vertex_shader_stream << vertex_shader_file.rdbuf();
-        fragment_shader_stream << fragment_shader_file.rdbuf();
-
-        vertex_shader_file.close();
-        fragment_shader_file.close();
-
-        vertex_code_str = vertex_shader_stream.str();
-        fragment_code_str = fragment_shader_stream.str();
+        vertex_code = default_vert_shader;
     }
     else
     {
-        // you're fucked
-        return;
+        std::ifstream vertex_shader_file(vertex_file_name);
+        vertex_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        if(vertex_shader_file.is_open())
+        {
+            std::stringstream vertex_shader_stream;
+            vertex_shader_stream << vertex_shader_file.rdbuf();
+            vertex_shader_file.close();
+            vertex_code_str = vertex_shader_stream.str();
+        }
+        vertex_code = vertex_code_str.c_str();
     }
-
-    vertex_code = vertex_code_str.c_str();
-    fragment_code = fragment_code_str.c_str();
+    
+    if(fragment_file_name == nullptr)
+    {
+        fragment_code = default_frag_shader;
+    }
+    else
+    {
+        std::ifstream fragment_shader_file(fragment_file_name);
+        fragment_shader_file.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        if(fragment_shader_file.is_open())
+        {
+            std::stringstream fragment_shader_stream;
+            fragment_shader_stream << fragment_shader_file.rdbuf();
+            fragment_shader_file.close();
+            fragment_code_str = fragment_shader_stream.str();
+        }
+        fragment_code = fragment_code_str.c_str();
+    }
 
     int success;
     char infoLog[512];
@@ -497,6 +556,11 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
     bound_textures[texture_unit] = texture_id;
 }
 
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
+}
+
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
@@ -550,11 +614,6 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 
 
     batch.current_index_offset += 4;
     batch.index_count += indices_count;
-}
-
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
-{
-    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
 }
 
 void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour)

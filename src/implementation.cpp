@@ -22,9 +22,8 @@ Implementation::Implementation()
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);
 
-    Graphics::LoadShader("default",         "res/shaders/default.vert", "res/shaders/default.frag");
-    Graphics::LoadShader("test",            "res/shaders/default.vert", "res/shaders/test.frag");
-    Graphics::LoadShader("second_tex_test", "res/shaders/default.vert", "res/shaders/second_tex_test.frag");
+    Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
+    Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
 
     Graphics::LoadTexture("sprites", "res/images/sprites.png", Graphics::NEAREST);
     Graphics::LoadTexture("ui",      "res/images/ui.png",      Graphics::LINEAR);
