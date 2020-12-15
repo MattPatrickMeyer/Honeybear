@@ -102,55 +102,8 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     InitScreenRenderData();
     InitBatchRenderer();
-    InitDefaultShaders();
-}
 
-void Graphics::InitDefaultShaders()
-{
-    int success;
-    char infoLog[512];
-
-    // vertex shader compile and check
-    GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader_id, 1, &default_vert_shader, NULL);
-    glCompileShader(vertex_shader_id);
-
-    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(vertex_shader_id, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // fragment shader compile and check
-    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader_id, 1, &default_frag_shader, NULL);
-    glCompileShader(fragment_shader_id);
-
-    glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(fragment_shader_id, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // shader program link and check
-    GLuint program_id = glCreateProgram();
-    glAttachShader(program_id, vertex_shader_id);
-    glAttachShader(program_id, fragment_shader_id);
-    glLinkProgram(program_id);
-
-    glGetProgramiv(program_id, GL_LINK_STATUS, &success);
-    if(!success)
-    {
-        glGetProgramInfoLog(program_id, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER_PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
-    }
-
-    glDeleteShader(vertex_shader_id);
-    glDeleteShader(fragment_shader_id);
-
-    shaders["default"] = program_id;
+    CreateShaderProgram("default", default_vert_shader, default_frag_shader);
 }
 
 void Graphics::InitScreenRenderData()
@@ -338,10 +291,6 @@ void Graphics::SwapBuffers()
 
 void Graphics::LoadShader(const std::string& shader_id, const char* vertex_file_name, const char* fragment_file_name)
 {
-    uint32_t program_id;
-    uint32_t vertex_shader_id;
-    uint32_t fragment_shader_id;
-
     std::string vertex_code_str;
     std::string fragment_code_str;
     const char* vertex_code;
@@ -383,11 +332,16 @@ void Graphics::LoadShader(const std::string& shader_id, const char* vertex_file_
         fragment_code = fragment_code_str.c_str();
     }
 
+    CreateShaderProgram(shader_id, vertex_code, fragment_code);
+}
+
+void Graphics::CreateShaderProgram(const std::string& shader_id, const char* vertex_code, const char* fragment_code)
+{
     int success;
     char infoLog[512];
 
     // vertex shader compile and check
-    vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
+    GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader_id, 1, &vertex_code, NULL);
     glCompileShader(vertex_shader_id);
 
@@ -399,7 +353,7 @@ void Graphics::LoadShader(const std::string& shader_id, const char* vertex_file_
     }
 
     // fragment shader compile and check
-    fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment_shader_id, 1, &fragment_code, NULL);
     glCompileShader(fragment_shader_id);
 
@@ -411,7 +365,7 @@ void Graphics::LoadShader(const std::string& shader_id, const char* vertex_file_
     }
 
     // shader program link and check
-    program_id = glCreateProgram();
+    GLuint program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
     glLinkProgram(program_id);

@@ -113,8 +113,8 @@ namespace Honeybear
         void ToggleFullscreen(const bool enabled);
         void ToggleVSync(const bool enabled);
 
-        void InitDefaultShaders();
         void LoadShader(const std::string& shader_id, const char* vertex_file_name, const char* fragment_file_name);
+        void CreateShaderProgram(const std::string& shader_id, const char* vertex_code, const char* fragment_code);
         void ActivateShader(const std::string& shader_id);
         void DeactivateShader();
 
