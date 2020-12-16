@@ -43,6 +43,8 @@ namespace Honeybear
         std::vector<Vec2> points;
         std::vector<Line> edges;
 
+        Polygon();
+        Polygon(const float x, const float y, const float w, const float h);
         Polygon(const std::vector<Vec2>& points);
 
         std::vector<Vec2> GetEdgeNormals();

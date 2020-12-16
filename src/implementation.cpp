@@ -1,3 +1,5 @@
+#include <Windows.h>
+#include <iostream>
 #include "implementation.h"
 #include "honeybear/graphics.h"
 #include "honeybear/input.h"
@@ -12,6 +14,9 @@ float test = 0.0f;
 
 Implementation::Implementation()
 {
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
+
     // int window_width = 2560;
     // int window_height = 1440;
     int window_width = 1920;
@@ -36,6 +41,8 @@ Implementation::Implementation()
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
     ui_frame_buffer =           Graphics::AddFrameBuffer();
+
+    std::cout << "test" << std::endl;
 }
 
 bool key_down = false;

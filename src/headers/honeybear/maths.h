@@ -14,6 +14,8 @@ namespace Honeybear
         Vec2(const float value);
         Vec2(const float x, const float y);
 
+        static Vec2 ZERO;
+
         float Dot(const Vec2& other);
         float Magnitude();
         Vec2 Normalised();
@@ -32,6 +34,8 @@ namespace Honeybear
         Vec3();
         Vec3(const float value);
         Vec3(const float x, const float y, const float z);
+
+        static Vec3 ZERO;
     };
 
     struct Vec4
@@ -44,6 +48,8 @@ namespace Honeybear
         Vec4();
         Vec4(const float value);
         Vec4(const float x, const float y, const float z, const float w);
+
+        static Vec4 ZERO;
     };
 };
 

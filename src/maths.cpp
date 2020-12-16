@@ -19,6 +19,8 @@ Vec2::Vec2(const float x, const float y) :
     y(y)
 {}
 
+Vec2 Vec2::ZERO = Vec2();
+
 Vec3::Vec3() :
     x(0.0f),
     y(0.0f),
@@ -36,6 +38,8 @@ Vec3::Vec3(const float x, const float y, const float z) :
     y(y),
     z(z)
 {}
+
+Vec3 Vec3::ZERO = Vec3();
 
 Vec4::Vec4() :
     x(0.0f),
@@ -57,6 +61,8 @@ Vec4::Vec4(const float x, const float y, const float z, const float w) :
     z(z),
     w(w)
 {}
+
+Vec4 Vec4::ZERO = Vec4();
 // --------------------------------
 
 float Vec2::Dot(const Vec2& other)

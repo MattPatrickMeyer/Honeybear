@@ -91,6 +91,19 @@ float Projection::GetOverlaps(const Projection& other)
     return 0.0f;
 }
 
+Polygon::Polygon()
+{}
+
+Polygon::Polygon(const float x, const float y, const float w, const float h)
+{
+    points.emplace_back(x, y);
+    points.emplace_back(x + w, y);
+    points.emplace_back(x + w, y + h);
+    points.emplace_back(x, y + h);
+
+    GenEdgeList(*this);
+}
+
 Polygon::Polygon(const std::vector<Vec2>& points) :
     points(points)
 {
