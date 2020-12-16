@@ -25,13 +25,13 @@ Implementation::Implementation()
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
 
-    Graphics::LoadTexture("sprites", "res/images/sprites.png", Graphics::NEAREST);
-    Graphics::LoadTexture("ui",      "res/images/ui.png",      Graphics::LINEAR);
+    Graphics::SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
+    Graphics::SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
 
-    Graphics::CreateSprite(1, "sprites", 0,   96,  32, 32);
-    Graphics::CreateSprite(2, "sprites", 0,   128, 32, 32);
-    Graphics::CreateSprite(3, "sprites", 448, 128, 32, 32);
-    Graphics::CreateSprite(4, "ui",      0,   160, 16, 16);
+    Graphics::CreateSprite(1, sprites, 0,   96,  32, 32);
+    Graphics::CreateSprite(2, sprites, 0,   128, 32, 32);
+    Graphics::CreateSprite(3, sprites, 448, 128, 32, 32);
+    Graphics::CreateSprite(4, ui,      0,   160, 16, 16);
 
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
@@ -94,7 +94,7 @@ void Implementation::Draw()
     Graphics::DeactivateShader();
 
     Graphics::ActivateShader("second_tex_test");
-    Graphics::SetShaderTexture("second_tex_test", "second_image", Graphics::frame_buffers[another_test_frame_buffer].tex_colour_buffer, 1);
+    Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", another_test_frame_buffer, 1);
     Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
     Graphics::DeactivateShader();
 

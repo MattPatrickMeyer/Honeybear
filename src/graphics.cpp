@@ -17,7 +17,8 @@ using namespace Honeybear;
 std::unordered_map<std::string, uint32_t> Graphics::shaders;
 std::unordered_map<std::string, Graphics::Texture> Graphics::textures;
 std::map<uint8_t, uint32_t> Graphics::bound_textures;
-std::unordered_map<uint32_t, Sprite> Graphics::sprites;
+std::unordered_map<std::string, Graphics::SpriteSheet*> Graphics::sprite_sheets;
+std::unordered_map<uint32_t, Graphics::Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
 std::string Graphics::activated_shader_id = "default";
@@ -459,11 +460,33 @@ void Graphics::SetShaderTexture(const std::string& shader_id, const std::string&
     glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), texture_unit);
 }
 
+void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit)
+{
+    GLuint texture_id = frame_buffers[frame_buffer_index].tex_colour_buffer;
+    SetShaderTexture(shader_id, uniform_name, texture_id, texture_unit);
+}
+
 // void Graphics::LoadFont(const std::string& font_id, const std::string& font_file_name)
 // {
 // }
 
-void Graphics::LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type)
+Graphics::SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type)
+{
+    if(sprite_sheets.count(sprite_sheet_name) == 0)
+    {
+        SpriteSheet* sprite_sheet = new SpriteSheet();
+        if(diffuse)
+            sprite_sheet->diffuse = LoadTexture(diffuse, filter_type);
+        if(specular)
+            sprite_sheet->specular = LoadTexture(specular, filter_type);
+        if(normal)
+            sprite_sheet->normal = LoadTexture(normal, filter_type);
+        sprite_sheets[sprite_sheet_name] = sprite_sheet;
+    }
+    return sprite_sheets[sprite_sheet_name];
+}
+
+Graphics::Texture* Graphics::LoadTexture(const std::string& texture_file_name, const FilterType filter_type)
 {
     int width, height, nrChannels;
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
@@ -471,7 +494,7 @@ void Graphics::LoadTexture(const std::string& texture_id, const std::string& tex
     GLuint filter = GL_LINEAR;
     if(filter_type == NEAREST) filter = GL_NEAREST;
 
-    Texture* texture = &textures[texture_id];
+    Texture* texture = &textures[texture_file_name];
 
     texture->width = width;
     texture->height = height;
@@ -490,15 +513,8 @@ void Graphics::LoadTexture(const std::string& texture_id, const std::string& tex
     glBindTexture(GL_TEXTURE_2D, 0);
 
     stbi_image_free(data);
-}
 
-void Graphics::BindTexture(const std::string& texture_id, const uint8_t texture_unit)
-{
-    glActiveTexture(texture_units[texture_unit]);
-    uint32_t ID = textures[texture_id].ID;
-    glBindTexture(GL_TEXTURE_2D, ID);
-
-    bound_textures[texture_unit] = ID;
+    return texture;
 }
 
 void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
@@ -514,10 +530,10 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint3
     DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawSprite(const Graphics::Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
-    uint32_t texture_id = textures[sprite.texture_id].ID;
+    uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;
 
     DoBatchRenderSetUp(frame_buffer_index, texture_id, indices_count);
 
@@ -807,13 +823,13 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
     }
 }
 
-void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h)
+void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h)
 {
-    sprites[sprite_id].texture_id = texture_id;
+    sprites[sprite_id].sprite_sheet = sprite_sheet;
     sprites[sprite_id].width = tex_w;
     sprites[sprite_id].height = tex_h;
 
-    Texture* texture = &textures[texture_id];
+    Texture* texture = sprite_sheet->diffuse;
     float texture_width = texture->width;
     float texture_height = texture->height;
 
@@ -822,6 +838,22 @@ void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture
     sprites[sprite_id].texture_w = tex_w / texture_width;
     sprites[sprite_id].texture_h = tex_h / texture_height;
 }
+
+// void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h)
+// {
+//     sprites[sprite_id].texture_id = texture_id;
+//     sprites[sprite_id].width = tex_w;
+//     sprites[sprite_id].height = tex_h;
+
+//     Texture* texture = &textures[texture_id];
+//     float texture_width = texture->width;
+//     float texture_height = texture->height;
+
+//     sprites[sprite_id].texture_x = tex_x / texture_width;
+//     sprites[sprite_id].texture_y = tex_y / texture_height;
+//     sprites[sprite_id].texture_w = tex_w / texture_width;
+//     sprites[sprite_id].texture_h = tex_h / texture_height;
+// }
 
 void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 {

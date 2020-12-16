@@ -12,17 +12,6 @@
 
 namespace Honeybear
 {
-    struct Sprite
-    {
-        std::string texture_id;
-        float width;
-        float height;
-        float texture_x;
-        float texture_y;
-        float texture_w;
-        float texture_h;
-    };
-
     namespace Graphics
     {
         enum FilterType
@@ -42,6 +31,26 @@ namespace Honeybear
             GLuint image_format;
             GLuint wrap_s;
             GLuint wrap_t;
+        };
+
+        struct SpriteSheet
+        {
+            Texture* diffuse;
+            Texture* specular;
+            Texture* normal;
+        };
+
+        struct Sprite
+        {
+            SpriteSheet* sprite_sheet = nullptr;
+
+            int width;
+            int height;
+
+            float texture_x;
+            float texture_y;
+            float texture_w;
+            float texture_h;
         };
 
         struct Vertex
@@ -90,6 +99,7 @@ namespace Honeybear
         extern std::unordered_map<std::string, uint32_t> shaders;
         extern std::unordered_map<std::string, Texture> textures;
         extern std::map<uint8_t, uint32_t> bound_textures;
+        extern std::unordered_map<std::string, SpriteSheet*> sprite_sheets;
         extern std::unordered_map<uint32_t, Sprite> sprites;
         extern std::vector<FrameBuffer> frame_buffers;
         extern uint32_t current_frame_buffer_index;
@@ -126,14 +136,16 @@ namespace Honeybear
         void SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const Vec3& value);
         void SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value);
         void SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit);
+        void SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit);
 
-        void LoadTexture(const std::string& texture_id, const std::string& texture_file_name, const FilterType filter_type);
-        void BindTexture(const std::string& texture_id, const uint8_t texture_unit);
+        Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
+
+        SpriteSheet* LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type);
 
         // void LoadFont(const std::string& font_id, const std::string& font_file_name);
 
-        void CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h);
+        void CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h);
         void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
         void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
 
