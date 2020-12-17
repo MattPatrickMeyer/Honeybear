@@ -15,10 +15,10 @@
 using namespace Honeybear;
 
 std::unordered_map<std::string, uint32_t> Graphics::shaders;
-std::unordered_map<std::string, Graphics::Texture> Graphics::textures;
+std::unordered_map<std::string, Texture> Graphics::textures;
 std::map<uint8_t, uint32_t> Graphics::bound_textures;
-std::unordered_map<std::string, Graphics::SpriteSheet*> Graphics::sprite_sheets;
-std::unordered_map<uint32_t, Graphics::Sprite> Graphics::sprites;
+std::unordered_map<std::string, SpriteSheet*> Graphics::sprite_sheets;
+std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
 std::string Graphics::activated_shader_id = "default";
@@ -470,7 +470,7 @@ void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const s
 // {
 // }
 
-Graphics::SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type)
+SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type)
 {
     if(sprite_sheets.count(sprite_sheet_name) == 0)
     {
@@ -486,7 +486,7 @@ Graphics::SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet
     return sprite_sheets[sprite_sheet_name];
 }
 
-Graphics::Texture* Graphics::LoadTexture(const std::string& texture_file_name, const FilterType filter_type)
+Texture* Graphics::LoadTexture(const std::string& texture_file_name, const FilterType filter_type)
 {
     int width, height, nrChannels;
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
@@ -530,7 +530,7 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint3
     DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
 }
 
-void Graphics::DrawSprite(const Graphics::Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;

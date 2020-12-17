@@ -12,45 +12,45 @@
 
 namespace Honeybear
 {
+    struct Texture
+    {
+        GLuint ID;
+
+        uint32_t width;
+        uint32_t height;
+
+        GLuint internal_format;
+        GLuint image_format;
+        GLuint wrap_s;
+        GLuint wrap_t;
+    };
+
+    struct SpriteSheet
+    {
+        Texture* diffuse;
+        Texture* specular;
+        Texture* normal;
+    };
+
+    struct Sprite
+    {
+        SpriteSheet* sprite_sheet = nullptr;
+
+        int width;
+        int height;
+
+        float texture_x;
+        float texture_y;
+        float texture_w;
+        float texture_h;
+    };
+
     namespace Graphics
     {
         enum FilterType
         {
             NEAREST,
             LINEAR
-        };
-
-        struct Texture
-        {
-            GLuint ID;
-
-            uint32_t width;
-            uint32_t height;
-
-            GLuint internal_format;
-            GLuint image_format;
-            GLuint wrap_s;
-            GLuint wrap_t;
-        };
-
-        struct SpriteSheet
-        {
-            Texture* diffuse;
-            Texture* specular;
-            Texture* normal;
-        };
-
-        struct Sprite
-        {
-            SpriteSheet* sprite_sheet = nullptr;
-
-            int width;
-            int height;
-
-            float texture_x;
-            float texture_y;
-            float texture_w;
-            float texture_h;
         };
 
         struct Vertex
