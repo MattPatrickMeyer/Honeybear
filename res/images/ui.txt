@@ -1,0 +1,8 @@
+ui
+res/images/ui.png
+res/images/ui.png
+res/images/ui.png
+8000    0   160   16  16  // top left circle
+8001    16  160   16  16  // top right circle
+8002    0   176   16  16  // bottom left circle
+8003    16  176   16  16  // bottom right circle

@@ -30,13 +30,16 @@ Implementation::Implementation()
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
 
-    SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
-    SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
+    // SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
+    // SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
 
-    Graphics::CreateSprite(1, sprites, 0,   96,  32, 32);
-    Graphics::CreateSprite(2, sprites, 0,   128, 32, 32);
-    Graphics::CreateSprite(3, sprites, 448, 128, 32, 32);
-    Graphics::CreateSprite(4, ui,      0,   160, 16, 16);
+    // Graphics::CreateSprite(1, sprites, 0,   96,  32, 32);
+    // Graphics::CreateSprite(2, sprites, 0,   128, 32, 32);
+    // Graphics::CreateSprite(3, sprites, 448, 128, 32, 32);
+    // Graphics::CreateSprite(4, ui,      0,   160, 16, 16);
+
+    Graphics::LoadSpritesFile("res/images/sprites.txt", Graphics::NEAREST);
+    Graphics::LoadSpritesFile("res/images/ui.txt", Graphics::LINEAR);
 
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
@@ -63,18 +66,18 @@ void Implementation::Draw()
     {
         for(int y = 0; y < 34; ++y)
         {
-            Graphics::DrawSprite(Graphics::sprites[1], Vec2(x * 32.0f, y * 32.0f), test_frame_buffer);
+            Graphics::DrawSprite(Graphics::sprites[105], Vec2(x * 32.0f, y * 32.0f), test_frame_buffer);
         }
     }
 
     double x_pos, y_pos;
     Input::CursorGamePosition(Graphics::window, &x_pos, &y_pos);
 
-    Graphics::DrawSprite(Graphics::sprites[3], Vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[3], Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[3], Vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::DrawSprite(Graphics::sprites[998], Vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[998], Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[998], Vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::DrawSprite(Graphics::sprites[4], Vec2(100 + test, 100), Vec2(5.0f, 5.0f), ui_frame_buffer);
+    Graphics::DrawSprite(Graphics::sprites[8000], Vec2(100 + test, 100), Vec2(5.0f, 5.0f), ui_frame_buffer);
 
     Graphics::FillTriangle(Vec2(100.0f, 100.0f), Vec2(150.0f, 150.0f), Vec2(50.0f, 150.0f), ui_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));

@@ -1,0 +1,100 @@
+sprites
+res/images/sprites.png
+res/images/sprites_specular.png
+res/images/sprites_normal.png
+1   0   0   32  32 
+2   32  0   32  32
+3   64  0   32  32
+4   96  0   32  32
+5   128 0   32  32
+6   0   64  32  32
+7   32  64  32  32
+8   64  64  32  32
+9   96  64  32  32
+10  0   32  32  32
+11  32  32  32  32
+12  64  32  32  32
+13  96  32  32  32
+14  128 64  32  32  // brick left wall foreground
+15  128 32  32  32  // brick right wall foreground
+101 0   96  32  32
+102 32  96  32  32
+103 64  96  32  32
+104 96  96  32  32
+105 128 96  32  32  // bricks
+106 192 128 32  32  // stones 1
+107 224 128 32  32  // stones 2
+108 192 160 32  32  // stones 3
+109 224 160 32  32  // stones 4
+110 160 96  32  32  // pointy
+201 0   128 32  32  // 1
+202 32  128 32  32  // 2
+203 64  128 32  32  // 3
+250 224 384 32  32  // blank key
+251 256 384 32  32  // w key
+252 288 384 32  32  // a key
+253 320 384 32  32  // s key
+254 352 384 32  32  // d key
+255 224 416 64  32  // space key
+256 288 416 64  32  // shift key
+257 384 384 32  32  // triangle button
+296 224 224 4   4   // crosshair top left
+297 228 224 4   4   // crosshair top right
+298 224 228 4   4   // crosshair bottom left
+299 228 228 4   4   // crosshair bottom right
+300 224 0   20  12  // pistol right
+301 256 0   20  12  // pistol left
+302 192 96  26  16  // smg right
+303 224 96  26  16  // smg left
+401 128 128 8   8   // dust cloud (test)
+402 136 128 8   8   // dust cloud solid (test)
+403 128 144 8   8   // dust cloud 1
+404 136 144 8   8   // dust cloud 2
+405 144 144 8   8   // dust cloud 3
+406 152 144 8   8   // dust cloud 4
+407 128 152 8   8   // dust cloud 5
+408 136 152 8   8   // dust cloud 6
+409 144 152 8   8   // dust cloud 7
+501 0   160 32  32  // shadow caster test
+502 32  160 32  32  // chain
+503 64  160 32  32  // chain bottom
+504 96  160 32  32  // chain top
+505 32  192 32  32  // chain broken
+510 224 256 32  32  // pipe horizontal
+511 256 256 32  32  // pipe vertical
+512 288 256 32  32  // pipe corner bottom right
+513 320 256 32  32  // pipe corner bottom left
+514 352 256 32  32  // pipe corner top right
+515 384 256 32  32  // pipe corner top left
+516 224 288 32  32  // pipe horizontal (rust)
+517 256 288 32  32  // pipe vertical (rust)
+518 288 288 32  32  // pipe corner bottom right (rust)
+519 320 288 32  32  // pipe corner bottom left (rust)
+520 352 288 32  32  // pipe corner top right (rust)
+521 384 288 32  32  // pipe corner top left (rust)
+530 320 96  32  32  // column
+601 0   224 128 128 // sewer pipe front (big)
+602 160 320 32  32  // vent thing
+603 480 192 128 128 // arch
+610 96  128 32  32  // crack 1
+620 288 96  32  32  // corner bricks
+700 160 384 48  64  // door frame
+701 163 451 42  61  // door test
+702 211 451 42  61  // door up
+703 259 451 42  61  // door down
+704 307 451 42  61  // door left
+705 355 451 42  61  // door right
+799 608 0   32  32  // water splash (test)
+801 448 96  24  20  // frog head
+802 480 96  24  17  // frog middle
+803 512 96  20  13  // frog back
+804 416 96  15  5   // frog leg 1
+805 416 102 16  9   // frog leg 2
+901 320 0   64  64  // eye (stamp)
+902 384 0   64  64  // yassy heart (stamp)
+950 192 0   13  10  // eye open
+951 205 0   13  10  // eye closed
+990 288 160 64  32  // wrap around test
+991 384 160 16  16  // wrap around test
+998 448 128 32  32  // test sprite
+999 480 128 32  32  // bowser test sprite

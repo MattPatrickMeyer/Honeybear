@@ -466,9 +466,55 @@ void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const s
     SetShaderTexture(shader_id, uniform_name, texture_id, texture_unit);
 }
 
-// void Graphics::LoadFont(const std::string& font_id, const std::string& font_file_name)
-// {
-// }
+void Graphics::LoadSpritesFile(const std::string& file_name, const FilterType filter_type)
+{
+    std::ifstream file(file_name);
+
+    if(file.is_open())
+    {
+        std::string line;
+
+        // sprite sheet name
+        std::string sprite_sheet_name;
+        std::getline(file, line);
+        std::istringstream ssn_ss(line);
+        ssn_ss >> sprite_sheet_name;
+
+        // diffuse file name
+        std::string diffuse_file_name;
+        std::getline(file, line);
+        std::istringstream dfn_ss(line);
+        dfn_ss >> diffuse_file_name;
+
+        // specular file name
+        std::string specular_file_name;
+        std::getline(file, line);
+        std::istringstream sfn_ss(line);
+        sfn_ss >> specular_file_name;
+
+        // normal file name
+        std::string normal_file_name;
+        std::getline(file, line);
+        std::istringstream nfn_ss(line);
+        nfn_ss >> normal_file_name;
+
+        SpriteSheet* sprite_sheet = LoadSpriteSheet(
+            sprite_sheet_name,
+            diffuse_file_name.c_str(),
+            specular_file_name.c_str(),
+            normal_file_name.c_str(),
+            filter_type
+        );
+
+        while(std::getline(file, line))
+        {
+            int id, x, y, w, h;
+            std::istringstream sprite_ss(line);
+            sprite_ss >> id >> x >> y >> w >> h;
+            CreateSprite(id, sprite_sheet, x, y, w, h);
+        }
+    }
+}
 
 SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type)
 {
