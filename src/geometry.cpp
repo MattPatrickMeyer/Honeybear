@@ -242,3 +242,14 @@ Projection Honeybear::ProjectToAxis(const Line& line, Vec2 axis)
         return Projection(end_p, start_p);
     }
 }
+
+bool Line::operator==(const Line& other) const
+{
+    return (start == other.start || start == other.end)
+        && (end == other.start || end == other.end);
+}
+
+bool Line::operator<(const Line& other) const
+{
+    return !(*this == other);
+}

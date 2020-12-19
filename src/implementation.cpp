@@ -1,8 +1,10 @@
 #include <Windows.h>
 #include <iostream>
+#include <algorithm>
 #include "implementation.h"
 #include "honeybear/graphics.h"
 #include "honeybear/input.h"
+#include "honeybear/geometry.h"
 
 using namespace Honeybear;
 
@@ -45,7 +47,17 @@ Implementation::Implementation()
     another_test_frame_buffer = Graphics::AddFrameBuffer();
     ui_frame_buffer =           Graphics::AddFrameBuffer();
 
-    std::cout << "test" << std::endl;
+    std::vector<Line> lines;
+    lines.emplace_back(0.0f, 0.0f, 100.0f, 100.0f);
+    lines.emplace_back(0.0f, 0.0f, 100.0f, 100.0f);
+    for(int i = 0; i < lines.size(); ++i)
+    {
+        Line line = lines[i];
+        if(std::count(lines.begin(), lines.end(), line) == 1)
+        {
+            std::cout << "test" << std::endl;
+        }
+    }
 }
 
 bool key_down = false;
@@ -73,11 +85,11 @@ void Implementation::Draw()
     double x_pos, y_pos;
     Input::CursorGamePosition(Graphics::window, &x_pos, &y_pos);
 
-    Graphics::DrawSprite(Graphics::sprites[998], Vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[998], Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
-    Graphics::DrawSprite(Graphics::sprites[998], Vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(7 * 32.0f + test, 5 * 32.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::DrawSprite(Graphics::sprites[8000], Vec2(100 + test, 100), Vec2(5.0f, 5.0f), ui_frame_buffer);
+    Graphics::DrawSprite(*Graphics::GetSprite(8000), Vec2(100 + test, 100), Vec2(5.0f, 5.0f), ui_frame_buffer);
 
     Graphics::FillTriangle(Vec2(100.0f, 100.0f), Vec2(150.0f, 150.0f), Vec2(50.0f, 150.0f), ui_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));

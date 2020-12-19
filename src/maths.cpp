@@ -100,3 +100,20 @@ bool Vec2::NonZero()
 {
     return std::abs(x) > 0.0f || std::abs(y) > 0.0f;
 }
+
+float Vec2::Distance(const Vec2& other)
+{
+    return Subtract(other).Magnitude();
+}
+
+// bool operator==(const Vec2& a, const Vec2& b)
+// {
+//     return a.x == b.x
+//         && a.y == b.y;
+// }
+
+bool Vec2::operator==(const Vec2& other) const
+{
+    return x == other.x
+        && y == other.y;
+}

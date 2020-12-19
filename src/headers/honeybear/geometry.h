@@ -36,6 +36,9 @@ namespace Honeybear
         bool GetIntersection(Line other, Vec2& intersection);
 
         Vec2 Direction();
+
+        bool operator==(const Line& other) const;
+        bool operator<(const Line& other) const;
     };
 
     struct Polygon

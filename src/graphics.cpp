@@ -869,6 +869,11 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
     }
 }
 
+Sprite* Graphics::GetSprite(const uint32_t sprite_id)
+{
+    return &sprites[sprite_id];
+}
+
 void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h)
 {
     sprites[sprite_id].sprite_sheet = sprite_sheet;

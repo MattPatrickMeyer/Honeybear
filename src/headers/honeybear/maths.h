@@ -22,7 +22,10 @@ namespace Honeybear
         Vec2 Perp();
         Vec2 Negated();
         Vec2 Subtract(const Vec2& other);
+        float Distance(const Vec2& other);
         bool NonZero();
+
+        bool operator==(const Vec2& other) const;
     };
 
     struct Vec3
@@ -51,6 +54,11 @@ namespace Honeybear
 
         static Vec4 ZERO;
     };
+
 };
+
+// using namespace Honeybear;
+
+// bool operator==(const Vec2& a, const Vec2& b);
 
 #endif
