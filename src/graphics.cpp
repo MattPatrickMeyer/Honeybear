@@ -67,7 +67,6 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     // common window hints
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_SAMPLES, 4);
 
     // create a new window
     window = glfwCreateWindow(window_width, window_height, window_title.c_str(), NULL, NULL);
@@ -94,6 +93,7 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     glViewport(0, 0, window_width, window_height);
 
+    // enable default blending function
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -103,7 +103,11 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
     InitScreenRenderData();
     InitBatchRenderer();
 
+    // create the default shader program
     CreateShaderProgram("default", default_vert_shader, default_frag_shader);
+
+    // activate the default shader
+    ActivateShader("default");
 }
 
 void Graphics::InitScreenRenderData()
@@ -387,19 +391,20 @@ void Graphics::ActivateShader(const std::string& shader_id)
 {
     FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
     glUseProgram(shaders[shader_id]);
-    SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
+    if(frame_buffer)
+    {
+        SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
+    }
     activated_shader_id = shader_id;
 }
 
 void Graphics::DeactivateShader()
 {
-    if(batch.index_count > 0)
-    {
-        EndBatch();
-        FlushBatch();
-        BeginBatch();
-    }
+    EndBatch();
+    FlushBatch();
+    BeginBatch();
 
+    // when we deactivate a shader, activate the default one
     ActivateShader("default");
 }
 
@@ -817,6 +822,7 @@ void Graphics::BeginBatch()
 
 void Graphics::EndBatch()
 {
+    if(batch.index_count == 0) return;
     GLsizeiptr size = (uint8_t*)batch.buffer_ptr - (uint8_t*)batch.buffer;
     glBindBuffer(GL_ARRAY_BUFFER, batch.VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, batch.buffer);
@@ -827,6 +833,7 @@ void Graphics::EndBatch()
 
 void Graphics::FlushBatch()
 {
+    if(batch.index_count == 0) return;
     glBindVertexArray(batch.VAO);
     glDrawElements(GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
     batch.index_count = 0;
@@ -847,7 +854,7 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
     //uint32_t texture_id = batch.shape_texture;
     if(bound_textures[0] != tex_id)
     {
-        should_start_new_batch = batch.index_count > 0;
+        should_start_new_batch = true;
         should_bind_texture = true;
     }
 
@@ -909,19 +916,16 @@ void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet,
 void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 {
     // flush any batched quads to the previous frame buffer
-    if(batch.index_count > 0)
-    {
-        EndBatch();
-        FlushBatch();
-    }
+    EndBatch();
+    FlushBatch();
+    // whenever we bind a new frame buffer, start a new batch
+    BeginBatch();
 
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
     glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
     glViewport(0, 0, frame_buffer->width, frame_buffer->height);
     current_frame_buffer_index = frame_buffer_index;
 
-    // whenever we bind a new frame buffer, start a new batch
-    BeginBatch();
 
     // make sure the shader projection matrix is set up
     SetShaderProjection(activated_shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
@@ -996,11 +1000,8 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
 
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
-    if(batch.index_count > 0)
-    {
-        EndBatch();
-        FlushBatch();
-    }
+    EndBatch();
+    FlushBatch();
 
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);

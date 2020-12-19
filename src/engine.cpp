@@ -70,6 +70,9 @@ void Engine::Render()
 
     Draw();
 
+    Graphics::EndBatch();
+    Graphics::FlushBatch();
+
     Graphics::SwapBuffers();
 }
 

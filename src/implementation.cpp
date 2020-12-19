@@ -1,4 +1,4 @@
-#include <Windows.h>
+//#include <Windows.h>
 #include <iostream>
 #include <algorithm>
 #include "implementation.h"
@@ -16,15 +16,15 @@ float test = 0.0f;
 
 Implementation::Implementation()
 {
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
+    // AllocConsole();
+    // freopen("CONOUT$", "w", stdout);
 
     // int window_width = 2560;
     // int window_height = 1440;
-    int window_width = 1920;
-    int window_height = 1080;
-    // int window_width = 1280;
-    // int window_height = 720;
+    // int window_width = 1920;
+    // int window_height = 1080;
+    int window_width = 1280;
+    int window_height = 720;
 
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);
@@ -72,7 +72,7 @@ void Implementation::Update(const float dt)
 
 void Implementation::Draw()
 {
-    Graphics::ActivateShader("default");
+    //Graphics::ActivateShader("default");
 
     for(int x = 0; x < 60; ++x)
     {
