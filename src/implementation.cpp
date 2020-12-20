@@ -46,6 +46,8 @@ Implementation::Implementation()
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
     // ui_frame_buffer =           Graphics::AddFrameBuffer();
+
+    //Graphics::SetClearColour(Vec4(1.0f, 0.5f, 0.0f, 1.0f));
 }
 
 bool key_down = false;
@@ -108,8 +110,10 @@ void Implementation::Draw()
     // Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
     // Graphics::DeactivateShader();
 
-    // Graphics::RenderFrameBuffer(test_frame_buffer);
-    Graphics::RenderFrameBuffer(another_test_frame_buffer);
+    Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
+
+    Graphics::RenderFrameBuffer(test_frame_buffer);
+    // Graphics::RenderFrameBuffer(another_test_frame_buffer);
     // Graphics::RenderFrameBuffer(ui_frame_buffer);
 }
 

@@ -70,8 +70,10 @@ void Engine::Render()
 
     Draw();
 
+    // todo: check this is needed
     Graphics::EndBatch();
     Graphics::FlushBatch();
+    // --------------------------
 
     Graphics::SwapBuffers();
 }

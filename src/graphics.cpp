@@ -27,6 +27,7 @@ Graphics::Batch Graphics::batch;
 Graphics::ScreenRenderData Graphics::screen_render_data;
 
 GLuint current_fbo = 0;
+Vec4 clear_colour(0.0f, 0.0f, 0.0f, 1.0f);
 
 std::map<uint8_t, GLenum> texture_units = 
 {
@@ -272,9 +273,14 @@ void Graphics::InitBatchRenderer()
     BeginBatch();
 }
 
+void Graphics::SetClearColour(const Vec4& colour)
+{
+    clear_colour = colour;
+}
+
 void Graphics::Clear()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(clear_colour.x, clear_colour.y, clear_colour.z, clear_colour.w);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -581,13 +587,42 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, colour);
+    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, DIFFUSE, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
+    DrawSprite(sprite, position, size, frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+{
+    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, sprite_sheet_layer, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+{
     int indices_count = 6;
     uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;
+
+    switch(sprite_sheet_layer)
+    {
+        case DIFFUSE :
+        {
+            texture_id = sprite.sprite_sheet->diffuse->ID;
+            break;
+        }
+        case SPECULAR :
+        {
+            texture_id = sprite.sprite_sheet->specular->ID;
+            break;
+        }
+        case NORMAL :
+        {
+            texture_id = sprite.sprite_sheet->normal->ID;
+            break;
+        }
+    }
 
     DoBatchRenderSetUp(frame_buffer_index, texture_id, indices_count);
 
@@ -967,6 +1002,70 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     frame_buffer->game_pixel_size = width / Honeybear::game_width;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
 
+    // ----------------------------------------------------------------------------
+    // set up the VAO used to for rendering another framebuffer to this framebuffer
+    // ----------------------------------------------------------------------------
+    glGenVertexArrays(1, &frame_buffer->quad_VAO);
+    glBindVertexArray(frame_buffer->quad_VAO);
+
+    glGenBuffers(1, &frame_buffer->quad_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, frame_buffer->quad_VBO);
+
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Vertex buffer[4];
+    // bottom right
+    buffer[0].position.x = width;
+    buffer[0].position.y = height;
+    buffer[0].tex_coords.x = 1.0f;
+    buffer[0].tex_coords.y = 1.0f;
+    buffer[0].colour = colour;
+    // top right
+    buffer[1].position.x = width;
+    buffer[1].position.y = 0.0f;
+    buffer[1].tex_coords.x = 1.0f;
+    buffer[1].tex_coords.y = 0.0f;
+    buffer[1].colour = colour;
+    // top left
+    buffer[2].position.x = 0.0f;
+    buffer[2].position.y = 0.0f;
+    buffer[2].tex_coords.x = 0.0f;
+    buffer[2].tex_coords.y = 0.0f;
+    buffer[2].colour = colour;
+    // bottom left
+    buffer[3].position.x = 0.0f;
+    buffer[3].position.y = height;
+    buffer[3].tex_coords.x = 0.0f;
+    buffer[3].tex_coords.y = 1.0f;
+    buffer[3].colour = colour;
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+
+    // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
+
+    // tex coords
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tex_coords));
+
+    // colour
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
+
+    uint32_t indices[] = {
+        0, 1, 3,
+        1, 2, 3
+    };
+
+    glGenBuffers(1, &frame_buffer->quad_IB);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, frame_buffer->quad_IB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    // ----------------------------------------------------------------------------
+
     // if this is the first frame buffer, bind it?
     if(frame_buffer_index == 0)
     {
@@ -998,6 +1097,42 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
     frame_buffer->width = width;
     frame_buffer->height = height;
     frame_buffer->game_pixel_size = width / Honeybear::game_width;
+
+    // ----------------------------------------------------------------------------
+    // update the VAO used to for rendering another framebuffer to this framebuffer
+    // ----------------------------------------------------------------------------
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Vertex buffer[4];
+    // bottom right
+    buffer[0].position.x = width;
+    buffer[0].position.y = height;
+    buffer[0].tex_coords.x = 1.0f;
+    buffer[0].tex_coords.y = 1.0f;
+    buffer[0].colour = colour;
+    // top right
+    buffer[1].position.x = width;
+    buffer[1].position.y = 0.0f;
+    buffer[1].tex_coords.x = 1.0f;
+    buffer[1].tex_coords.y = 0.0f;
+    buffer[1].colour = colour;
+    // top left
+    buffer[2].position.x = 0.0f;
+    buffer[2].position.y = 0.0f;
+    buffer[2].tex_coords.x = 0.0f;
+    buffer[2].tex_coords.y = 0.0f;
+    buffer[2].colour = colour;
+    // bottom left
+    buffer[3].position.x = 0.0f;
+    buffer[3].position.y = height;
+    buffer[3].tex_coords.x = 0.0f;
+    buffer[3].tex_coords.y = 1.0f;
+    buffer[3].colour = colour;
+
+    glBindBuffer(GL_ARRAY_BUFFER, frame_buffer->quad_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // ----------------------------------------------------------------------------
 }
 
 void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
@@ -1020,6 +1155,18 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     current_fbo = 0;
     BindTexture(frame_buffer->tex_colour_buffer, 0);
     glBindVertexArray(screen_render_data.quad_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+}
+
+void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index)
+{
+    FrameBuffer* source_frame_buffer = &frame_buffers[source_frame_buffer_index];
+    FrameBuffer* dest_frame_buffer = &frame_buffers[dest_frame_buffer_index];
+
+    BindFrameBuffer(dest_frame_buffer_index);
+    BindTexture(source_frame_buffer->tex_colour_buffer, 0);
+    glBindVertexArray(dest_frame_buffer->quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }

@@ -45,6 +45,13 @@ namespace Honeybear
         float texture_h;
     };
 
+    enum SpriteSheetLayer
+    {
+        DIFFUSE,
+        SPECULAR,
+        NORMAL
+    };
+
     namespace Graphics
     {
         enum FilterType
@@ -80,6 +87,11 @@ namespace Honeybear
         {
             GLuint FBO;
             GLuint tex_colour_buffer;
+
+            GLuint quad_VAO;
+            GLuint quad_VBO;
+            GLuint quad_IB;
+
             float width;
             float height;
             float game_pixel_size;
@@ -112,6 +124,7 @@ namespace Honeybear
         extern ScreenRenderData screen_render_data;
 
         void Init(uint32_t window_width, uint32_t window_height, const std::string& window_title);
+        void SetClearColour(const Vec4& colour);
         void Clear();
         void ClearFrameBuffers();
         void SwapBuffers();
@@ -146,6 +159,8 @@ namespace Honeybear
         void CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h);
         void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
         void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
         Sprite* GetSprite(const uint32_t sprite_id);
 
         void FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour);
@@ -156,6 +171,7 @@ namespace Honeybear
         uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution = false);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
+        void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
         void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
 
