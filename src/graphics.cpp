@@ -20,7 +20,7 @@ std::map<uint8_t, uint32_t> Graphics::bound_textures;
 std::unordered_map<std::string, SpriteSheet*> Graphics::sprite_sheets;
 std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
-uint32_t Graphics::current_frame_buffer_index;
+uint32_t Graphics::current_frame_buffer_index = -1;
 std::string Graphics::activated_shader_id = "default";
 GLFWwindow* Graphics::window;
 Graphics::Batch Graphics::batch;

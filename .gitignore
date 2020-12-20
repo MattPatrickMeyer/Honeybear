@@ -3,8 +3,9 @@ Makefile_old
 .vscode/
 *.dll
 *.exe
+*.dylib
+*.ttf
+*.dSYM
 .DS_Store
 main
-main.dSYM
 todo.txt
-*.ttf
