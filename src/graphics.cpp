@@ -20,11 +20,13 @@ std::map<uint8_t, uint32_t> Graphics::bound_textures;
 std::unordered_map<std::string, SpriteSheet*> Graphics::sprite_sheets;
 std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
-uint32_t Graphics::current_frame_buffer_index = -1;
+uint32_t Graphics::current_frame_buffer_index;
 std::string Graphics::activated_shader_id = "default";
 GLFWwindow* Graphics::window;
 Graphics::Batch Graphics::batch;
 Graphics::ScreenRenderData Graphics::screen_render_data;
+
+GLuint current_fbo = 0;
 
 std::map<uint8_t, GLenum> texture_units = 
 {
@@ -286,6 +288,7 @@ void Graphics::ClearFrameBuffers()
         glClear(GL_COLOR_BUFFER_BIT);
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    current_fbo = 0;
 }
 
 void Graphics::SwapBuffers()
@@ -843,7 +846,8 @@ void Graphics::FlushBatch()
 
 void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices)
 {
-    if(frame_buffer_index != current_frame_buffer_index)
+    //if(frame_buffer_index != current_frame_buffer_index)
+    if(frame_buffers[frame_buffer_index].FBO != current_fbo)
     {
         BindFrameBuffer(frame_buffer_index);
     }
@@ -923,9 +927,9 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
     glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+    current_fbo = frame_buffer->FBO;
     glViewport(0, 0, frame_buffer->width, frame_buffer->height);
     current_frame_buffer_index = frame_buffer_index;
-
 
     // make sure the shader projection matrix is set up
     SetShaderProjection(activated_shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
@@ -989,6 +993,7 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    current_fbo = 0;
 
     frame_buffer->width = width;
     frame_buffer->height = height;
@@ -1002,6 +1007,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
     EndBatch();
     FlushBatch();
+    BeginBatch();
 
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
@@ -1011,8 +1017,8 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     SetShaderProjection(activated_shader_id, 0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
+    current_fbo = 0;
+    BindTexture(frame_buffer->tex_colour_buffer, 0);
     glBindVertexArray(screen_render_data.quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
