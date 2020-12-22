@@ -150,6 +150,7 @@ namespace Honeybear
         void SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value);
         void SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit);
         void SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit);
+        void CheckAndStartNewBatch();
 
         Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);

@@ -398,6 +398,13 @@ void Graphics::CreateShaderProgram(const std::string& shader_id, const char* ver
 
 void Graphics::ActivateShader(const std::string& shader_id)
 {
+    if(shader_id != activated_shader_id)
+    {
+        EndBatch();
+        FlushBatch();
+        BeginBatch();
+    }
+
     FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
     glUseProgram(shaders[shader_id]);
     if(frame_buffer)
@@ -417,8 +424,20 @@ void Graphics::DeactivateShader()
     ActivateShader("default");
 }
 
+void Graphics::CheckAndStartNewBatch()
+{
+    if(batch.index_count > 0)
+    {
+        EndBatch();
+        FlushBatch();
+        BeginBatch();
+    }
+}
+
 void Graphics::SetShaderProjection(const std::string& shader_id, const float left, const float right, const float bottom, const float top, const float z_near, const float z_far)
 {
+    CheckAndStartNewBatch();
+
     GLfloat matrix[] = {
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
@@ -439,36 +458,42 @@ void Graphics::SetShaderProjection(const std::string& shader_id, const float lef
 
 void Graphics::SetShaderFloat(const std::string& shader_id, const std::string& uniform_name, const float value)
 {
+    CheckAndStartNewBatch();
     uint32_t program_ID = shaders[shader_id];
     glUniform1f(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
 }
 
 void Graphics::SetShaderInt(const std::string& shader_id, const std::string& uniform_name, const int value)
 {
+    CheckAndStartNewBatch();
     uint32_t program_ID = shaders[shader_id];
     glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), value);
 }
 
 void Graphics::SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const Vec2& value)
 {
+    CheckAndStartNewBatch();
     uint32_t program_ID = shaders[shader_id];
     glUniform2f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y);
 }
 
 void Graphics::SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const Vec3& value)
 {
+    CheckAndStartNewBatch();
     uint32_t program_ID = shaders[shader_id];
     glUniform3f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z);
 }
 
 void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value)
 {
+    CheckAndStartNewBatch();
     uint32_t program_ID = shaders[shader_id];
     glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z, value.w);
 }
 
 void Graphics::SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit)
 {
+    CheckAndStartNewBatch();
     BindTexture(texture_id, texture_unit);
     uint32_t program_ID = shaders[shader_id];
     glUniform1i(glGetUniformLocation(program_ID, uniform_name.c_str()), texture_unit);
@@ -476,6 +501,7 @@ void Graphics::SetShaderTexture(const std::string& shader_id, const std::string&
 
 void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit)
 {
+    CheckAndStartNewBatch();
     GLuint texture_id = frame_buffers[frame_buffer_index].tex_colour_buffer;
     SetShaderTexture(shader_id, uniform_name, texture_id, texture_unit);
 }
@@ -917,7 +943,11 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
 
 Sprite* Graphics::GetSprite(const uint32_t sprite_id)
 {
-    return &sprites[sprite_id];
+    if(sprites.count(sprite_id) > 0)
+    {
+        return &sprites[sprite_id];
+    }
+    return nullptr;
 }
 
 void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h)

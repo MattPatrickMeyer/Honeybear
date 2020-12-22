@@ -80,6 +80,13 @@ namespace Honeybear
     Projection ProjectToAxis(const Circle& circle, Vec2 axis);
     Projection ProjectToAxis(const Polygon& polygon, Vec2 axis);
     Projection ProjectToAxis(const Line& line, Vec2 axis);
+
+    struct PolarCompare
+    {
+        Vec2 pivot;
+        PolarCompare(const Vec2& pivot);
+        bool operator() (const Vec2& a, const Vec2& b);
+    };
 };
 
 #endif

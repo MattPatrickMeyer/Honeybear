@@ -5,6 +5,7 @@
 #include "honeybear/graphics.h"
 #include "honeybear/input.h"
 #include "honeybear/geometry.h"
+#include "honeybear/stb_image.h"
 
 using namespace Honeybear;
 
@@ -13,6 +14,7 @@ uint32_t another_test_frame_buffer;
 uint32_t ui_frame_buffer;
 
 float test = 0.0f;
+Texture* palette;
 
 Implementation::Implementation()
 {
@@ -48,6 +50,10 @@ Implementation::Implementation()
     // ui_frame_buffer =           Graphics::AddFrameBuffer();
 
     //Graphics::SetClearColour(Vec4(1.0f, 0.5f, 0.0f, 1.0f));
+    //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
+    palette = Graphics::LoadTexture("res/images/palette.png", Graphics::NEAREST);
+
+    std::cout << stbi_failure_reason() << std::endl;
 }
 
 bool key_down = false;
@@ -105,10 +111,10 @@ void Implementation::Draw()
 
     // Graphics::DeactivateShader();
 
-    // Graphics::ActivateShader("second_tex_test");
-    // Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", another_test_frame_buffer, 1);
-    // Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    // Graphics::DeactivateShader();
+    Graphics::ActivateShader("second_tex_test");
+    Graphics::SetShaderTexture("second_tex_test", "second_image", palette->ID, 1);
+    Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    Graphics::DeactivateShader();
 
     Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
 

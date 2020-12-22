@@ -253,3 +253,18 @@ bool Line::operator<(const Line& other) const
 {
     return !(*this == other);
 }
+
+Honeybear::PolarCompare::PolarCompare(const Vec2& pivot) :
+    pivot(pivot)
+{}
+
+bool Honeybear::PolarCompare::operator() (const Vec2& a, const Vec2& b)
+{
+    Line pa(pivot, a);
+    Line pb(pivot, b);
+
+    float angle_a = VectorToDegrees(pa.Direction());
+    float angle_b = VectorToDegrees(pb.Direction());
+
+    return angle_a < angle_b;
+}
