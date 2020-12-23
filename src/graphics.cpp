@@ -879,6 +879,46 @@ void Graphics::FillConvexPoly(const std::vector<Vec2>& points, const uint32_t fr
     batch.current_index_offset += points.size();
 }
 
+void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    int indices_count = 2;
+
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count, true);
+
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    // start
+    batch.buffer_ptr->position.x = start.x * pixel_size;
+    batch.buffer_ptr->position.y = start.y * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // end
+    batch.buffer_ptr->position.x = end.x * pixel_size;
+    batch.buffer_ptr->position.y = end.y * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // indices
+    batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+
+    batch.index_count += indices_count;
+    batch.current_index_offset += indices_count;
+}
+
+void Graphics::DrawRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    DrawLine(Vec2(x, y), Vec2(x + w, y), frame_buffer_index, colour);
+    DrawLine(Vec2(x + w, y), Vec2(x + w, y + h), frame_buffer_index, colour);
+    DrawLine(Vec2(x + w, y + h), Vec2(x, y + h), frame_buffer_index, colour);
+    DrawLine(Vec2(x, y + h), Vec2(x, y), frame_buffer_index, colour);
+}
+
 void Graphics::BeginBatch()
 {
     batch.buffer_ptr = batch.buffer;
@@ -899,13 +939,20 @@ void Graphics::FlushBatch()
 {
     if(batch.index_count == 0) return;
     glBindVertexArray(batch.VAO);
-    glDrawElements(GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
+    if(batch.draw_lines)
+    {
+        glDrawElements(GL_LINES, batch.index_count, GL_UNSIGNED_INT, nullptr);
+    }
+    else
+    {
+        glDrawElements(GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
+    }
     batch.index_count = 0;
     batch.current_index_offset = 0;
     glBindVertexArray(0);
 }
 
-void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices)
+void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, bool draw_lines)
 {
     //if(frame_buffer_index != current_frame_buffer_index)
     if(frame_buffers[frame_buffer_index].FBO != current_fbo)
@@ -928,6 +975,11 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
         should_start_new_batch = true;
     }
 
+    if(batch.draw_lines != draw_lines)
+    {
+        should_start_new_batch = true;
+    }
+
     if(should_start_new_batch)
     {
         EndBatch();
@@ -939,6 +991,8 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
     {
         BindTexture(tex_id, 0);
     }
+
+    batch.draw_lines = draw_lines;
 }
 
 Sprite* Graphics::GetSprite(const uint32_t sprite_id)

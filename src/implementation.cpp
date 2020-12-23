@@ -91,6 +91,9 @@ void Implementation::Draw()
     // Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
     Graphics::FillCircle(Vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::DrawLine(Vec2(0.0f, 0.0f), Vec2(100.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    Graphics::DrawLine(Vec2(100.0f, 100.0f), Vec2(150.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
     //Graphics::FillCircle(Vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, Vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
     // Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
