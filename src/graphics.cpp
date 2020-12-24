@@ -919,6 +919,45 @@ void Graphics::DrawRectangle(const float x, const float y, const float w, const 
     DrawLine(Vec2(x, y + h), Vec2(x, y), frame_buffer_index, colour);
 }
 
+void Graphics::DrawCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    // -----------------------------
+    // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
+    float error = 0.25f;
+    float th = std::acos(2 * ((1 - error / (radius * pixel_size)) * (1 - error / (radius * pixel_size))) - 1);
+    int number_of_sides = std::ceil(2 * PI / th);
+    // -----------------------------
+
+    float angle_per_side = 360.0f / number_of_sides;
+
+    for(size_t i = 0; i < number_of_sides; ++i)
+    {
+        float degrees = i * angle_per_side;
+        float radians = degrees * (PI / 180.0f);
+        Vec2 start(
+            pos.x + std::cos(radians) * radius,
+            pos.y + std::sin(radians) * radius
+        );
+        radians = (degrees + angle_per_side) * (PI / 180.0f);
+        Vec2 end(
+            pos.x + std::cos(radians) * radius,
+            pos.y + std::sin(radians) * radius
+        );
+        DrawLine(start, end, frame_buffer_index, colour);
+    }
+}
+
+void Graphics::DrawPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    for(size_t i = 0; i < points.size(); ++i)
+    {
+        size_t next_i = (i + 1) % points.size();
+        DrawLine(points[i], points[next_i], frame_buffer_index, colour);
+    }
+}
+
 void Graphics::BeginBatch()
 {
     batch.buffer_ptr = batch.buffer;
