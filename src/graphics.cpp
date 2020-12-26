@@ -978,14 +978,7 @@ void Graphics::FlushBatch()
 {
     if(batch.index_count == 0) return;
     glBindVertexArray(batch.VAO);
-    if(batch.draw_lines)
-    {
-        glDrawElements(GL_LINES, batch.index_count, GL_UNSIGNED_INT, nullptr);
-    }
-    else
-    {
-        glDrawElements(GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
-    }
+    glDrawElements(batch.draw_lines ? GL_LINES : GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
     batch.index_count = 0;
     batch.current_index_offset = 0;
     glBindVertexArray(0);
