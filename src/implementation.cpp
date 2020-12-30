@@ -1,4 +1,4 @@
-#include <Windows.h>
+//#include <Windows.h>
 #include <iostream>
 #include <algorithm>
 #include "implementation.h"
@@ -18,15 +18,15 @@ Texture* palette;
 
 Implementation::Implementation()
 {
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
+    // AllocConsole();
+    // freopen("CONOUT$", "w", stdout);
 
     // int window_width = 2560;
     // int window_height = 1440;
-    int window_width = 1920;
-    int window_height = 1080;
-    // int window_width = 1280;
-    // int window_height = 720;
+    // int window_width = 1920;
+    // int window_height = 1080;
+    int window_width = 1280;
+    int window_height = 720;
 
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);
@@ -78,8 +78,8 @@ void Implementation::Draw()
     //     }
     // }
 
-    // double x_pos, y_pos;
-    // Input::CursorGamePosition(Graphics::window, &x_pos, &y_pos);
+    Vec2 mouse_pos;
+    Input::CursorGamePosition(Graphics::window, &mouse_pos);
 
     // Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(0 * 32.0f, 0 * 32.0f), another_test_frame_buffer);
     // Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(6 * 32.0f, 5 * 32.0f), another_test_frame_buffer);
@@ -90,7 +90,7 @@ void Implementation::Draw()
     // Graphics::FillTriangle(Vec2(100.0f, 100.0f), Vec2(150.0f, 150.0f), Vec2(50.0f, 150.0f), ui_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     // Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::FillCircle(Vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::DrawCircle(Vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::DrawLine(Vec2(0.0f, 0.0f), Vec2(100.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::DrawLine(Vec2(100.0f, 100.0f), Vec2(150.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
@@ -98,19 +98,19 @@ void Implementation::Draw()
 
     // Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
-    // std::vector<Vec2> points;
-    // points.emplace_back(0.0f, 0.0f);
-    // points.emplace_back(50.0f, 50.0f);
-    // points.emplace_back(40.0f, 75.0f);
-    // points.emplace_back(0.0f, 100.0f);
-    // points.emplace_back(-50.0f, 50.0f);
-    // for(size_t i = 0; i < points.size(); ++i)
-    // {
-    //     points[i].x += x_pos;
-    //     points[i].y += y_pos;
-    // }
+    std::vector<Vec2> points;
+    points.emplace_back(0.0f, 0.0f);
+    points.emplace_back(50.0f, 50.0f);
+    points.emplace_back(40.0f, 75.0f);
+    points.emplace_back(0.0f, 100.0f);
+    points.emplace_back(-50.0f, 50.0f);
+    for(size_t i = 0; i < points.size(); ++i)
+    {
+        points[i].x += mouse_pos.x;
+        points[i].y += mouse_pos.y;
+    }
 
-    // Graphics::FillConvexPoly(points, another_test_frame_buffer, Vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    Graphics::DrawPoly(points, another_test_frame_buffer, Vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
     // Graphics::DeactivateShader();
 

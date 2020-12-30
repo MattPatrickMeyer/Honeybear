@@ -7,6 +7,8 @@ struct GLFWwindow;
 
 namespace Honeybear
 {
+    struct Vec2;
+
     namespace Input
     {
         enum Key
@@ -101,8 +103,10 @@ namespace Honeybear
         bool WasKeyReleased(Key key);
         bool IsKeyHeld(Key key);
 
-        void CursorWindowPosition(GLFWwindow* window, double* x_pos, double* y_pos);
-        void CursorGamePosition(GLFWwindow* window, double* x_pos, double* y_pos);
+        void CursorWindowPosition(GLFWwindow* window, float* x_pos, float* y_pos);
+        void CursorGamePosition(GLFWwindow* window, float* x_pos, float* y_pos);
+        void CursorWindowPosition(GLFWwindow* window, Vec2* pos);
+        void CursorGamePosition(GLFWwindow* window, Vec2* pos);
     };
 };
 

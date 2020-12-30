@@ -100,14 +100,18 @@ void Input::BeginNewFrame()
     released_keys.clear();
 }
 
-void Input::CursorWindowPosition(GLFWwindow* window, double* x_pos, double* y_pos)
+void Input::CursorWindowPosition(GLFWwindow* window, float* x_pos, float* y_pos)
 {
-    glfwGetCursorPos(window, x_pos, y_pos);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    *x_pos = x;
+    *y_pos = y;
 }
 
-void Input::CursorGamePosition(GLFWwindow* window, double* x_pos, double* y_pos)
+void Input::CursorGamePosition(GLFWwindow* window, float* x_pos, float* y_pos)
 {
-    glfwGetCursorPos(window, x_pos, y_pos);
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
 
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
@@ -115,8 +119,18 @@ void Input::CursorGamePosition(GLFWwindow* window, double* x_pos, double* y_pos)
     float scale_x = Honeybear::game_width / window_width;
     float scale_y = Honeybear::game_height / window_height;
 
-    *x_pos *= scale_x;
-    *y_pos *= scale_y;
+    *x_pos = x * scale_x;
+    *y_pos = y * scale_y;
+}
+
+void Input::CursorWindowPosition(GLFWwindow* window, Vec2* pos)
+{
+    CursorWindowPosition(window, &pos->x, &pos->y);
+}
+
+void Input::CursorGamePosition(GLFWwindow* window, Vec2* pos)
+{
+    CursorGamePosition(window, &pos->x, &pos->y);
 }
 
 void Input::KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int action, int mods)
