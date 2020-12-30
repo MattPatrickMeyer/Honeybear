@@ -913,6 +913,7 @@ void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame
 
 void Graphics::DrawRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
+    // todo: slow (but who cares?) this shouldn't use DrawLine and should be done properly with GL_LINE_STRIP
     DrawLine(Vec2(x, y), Vec2(x + w, y), frame_buffer_index, colour);
     DrawLine(Vec2(x + w, y), Vec2(x + w, y + h), frame_buffer_index, colour);
     DrawLine(Vec2(x + w, y + h), Vec2(x, y + h), frame_buffer_index, colour);
