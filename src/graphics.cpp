@@ -933,6 +933,7 @@ void Graphics::DrawCircle(const Vec2& pos, const float radius, const uint32_t fr
 
     float angle_per_side = 360.0f / number_of_sides;
 
+    // todo: dumb and slow?
     for(size_t i = 0; i < number_of_sides; ++i)
     {
         float degrees = i * angle_per_side;

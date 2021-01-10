@@ -14,6 +14,16 @@ namespace
     }
 }
 
+AABB::AABB(const float x, const float y, const Vec2& size) : 
+    position(x, y),
+    size(size)
+{}
+
+AABB::AABB(const Vec2& position, const Vec2& size) :
+    position(position),
+    size(size)
+{}
+
 Rectangle::Rectangle(const float x, const float y, const float width, const float height) :
     position(x, y),
     width(width),
@@ -82,7 +92,7 @@ bool Projection::Overlaps(const Projection& other)
     return !(min > other.max || other.min > max);
 }
 
-float Projection::GetOverlaps(const Projection& other)
+float Projection::GetOverlap(const Projection& other)
 {
     if(Overlaps(other))
     {
@@ -108,6 +118,20 @@ Polygon::Polygon(const std::vector<Vec2>& points) :
     points(points)
 {
     GenEdgeList(*this);
+}
+
+Vec2 Polygon::Center()
+{
+    float cx = 0.0f;
+    float cy = 0.0f;
+
+    for(size_t i = 0; i < points.size(); ++i)
+    {
+        cx += points[i].x;
+        cy += points[i].y;
+    }
+
+    return Vec2(cx / points.size(), cy / points.size());
 }
 
 std::vector<Vec2> Polygon::GetEdgeNormals()
@@ -267,4 +291,13 @@ bool Honeybear::PolarCompare::operator() (const Vec2& a, const Vec2& b)
     float angle_b = VectorToDegrees(pb.Direction());
 
     return angle_a < angle_b;
+}
+
+Rectangle Honeybear::RectangleFromAABB(const AABB& aabb)
+{
+    return Rectangle(
+        aabb.position.x - aabb.size.x,
+        aabb.position.y - aabb.size.y,
+        aabb.size.x * 2,
+        aabb.size.y * 2);
 }

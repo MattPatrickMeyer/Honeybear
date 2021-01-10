@@ -7,6 +7,15 @@
 
 namespace Honeybear
 {
+    struct AABB
+    {
+        Vec2 position;
+        Vec2 size;
+
+        AABB(const float x, const float y, const Vec2& size);
+        AABB(const Vec2& position, const Vec2& size);
+    };
+
     struct Rectangle
     {
         Vec2 position;
@@ -53,6 +62,7 @@ namespace Honeybear
         std::vector<Vec2> GetEdgeNormals();
         Polygon CloneToLocation(const float x, const float y);
         Vec2 ClosestPoint(const Vec2 point);
+        Vec2 Center();
     };
 
     struct Circle
@@ -72,8 +82,10 @@ namespace Honeybear
         Projection(const float min, const float max);
 
         bool Overlaps(const Projection& other);
-        float GetOverlaps(const Projection& other);
+        float GetOverlap(const Projection& other);
     };
+
+    Rectangle RectangleFromAABB(const AABB& aabb);
 
     bool RectangleContainsPoint(const Rectangle& rectangle, const Vec2 point);
 
