@@ -197,3 +197,86 @@ void Honeybear::DegreesToVector(const float degrees, Vec2& v)
 {
     RadiansToVector(DegreesToRadians(degrees), v);
 }
+
+float Honeybear::Ease(float t, float b, float c, float d, EasingType easing_type)
+{
+    if(c == 0.0f) return b;
+
+    if(easing_type == LINEAR)
+    {
+        return EaseLinear(t, b, c, d);
+    }
+    else if(easing_type == EASE_IN_CUBIC)
+    {
+        return EaseInCubic(t, b, c, d);
+    }
+    else if(easing_type == EASE_OUT_CUBIC)
+    {
+        return EaseOutCubic(t, b, c, d);
+    }
+    else if(easing_type == EASE_IN_OUT_CUBIC)
+    {
+        return EaseInOutCubic(t, b, c, d);
+    }
+    else if(easing_type == EASE_IN_BACK)
+    {
+        return EaseInBack(t, b, c, d);
+    }
+    else if(easing_type == EASE_OUT_BACK)
+    {
+        return EaseOutBack(t, b, c, d);
+    }
+    else if(easing_type == EASE_IN_OUT_BACK)
+    {
+        return EaseInOutBack(t, b, c, d);
+    }
+}
+
+float Honeybear::EaseLinear(float t, float b, float c, float d)
+{
+    float p = t / d;
+    return b + (c * p);
+}
+
+float Honeybear::EaseInCubic(float t, float b, float c, float d)
+{
+    return c * (t /= d) * t * t + b;
+}
+
+float Honeybear::EaseOutCubic(float t, float b, float c, float d)
+{
+    return c * ((t = t / d - 1) * t * t + 1) + b;
+}
+
+float Honeybear::EaseInOutCubic(float t, float b, float c, float d)
+{
+    if ((t /= d / 2) < 1)
+    {
+        return c / 2 * t * t * t + b;
+    }
+    return c / 2 * ((t -= 2) * t * t + 2) + b;
+}
+
+float Honeybear::EaseInBack(float t, float b, float c, float d)
+{
+    float s = 1.70158f;
+	float postFix = t /= d;
+	return c * (postFix) * t * ((s + 1) * t - s) + b;
+}
+
+float Honeybear::EaseOutBack(float t, float b, float c, float d)
+{
+    float s = 1.70158f;
+	return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+}
+
+float Honeybear::EaseInOutBack(float t, float b, float c, float d)
+{
+    float s = 1.70158f;
+	if ((t /= d/2) < 1)
+    {
+        return c / 2 * (t * t * (((s *= (1.525f)) + 1) * t - s)) + b;
+    }
+	float postFix = t -= 2;
+	return c / 2 * ((postFix) * t * (((s *= (1.525f)) + 1) * t + s) + 2) + b;
+}

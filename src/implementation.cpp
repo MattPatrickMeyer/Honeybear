@@ -23,10 +23,10 @@ Implementation::Implementation()
 
     // int window_width = 2560;
     // int window_height = 1440;
-    int window_width = 1920;
-    int window_height = 1080;
-    // int window_width = 1280;
-    // int window_height = 720;
+    // int window_width = 1920;
+    // int window_height = 1080;
+    int window_width = 1280;
+    int window_height = 720;
 
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);

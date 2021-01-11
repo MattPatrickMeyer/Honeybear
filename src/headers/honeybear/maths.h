@@ -16,6 +16,7 @@ namespace Honeybear
 
         static Vec2 ZERO;
 
+        // todo: remove member functions
         float Dot(const Vec2& other);
         float Magnitude();
         float Distance(const Vec2& other);
@@ -73,6 +74,29 @@ namespace Honeybear
     void DegreesToRadians(const float degrees, float& radians);
     void RadiansToVector(const float radians, Vec2& v);
     void DegreesToVector(const float degrees, Vec2& v);
+
+    // ------------
+    // ** EASING **
+    // ------------
+    enum EasingType
+    {
+        LINEAR,
+        EASE_IN_CUBIC,
+        EASE_OUT_CUBIC,
+        EASE_IN_OUT_CUBIC,
+        EASE_IN_BACK,
+        EASE_OUT_BACK,
+        EASE_IN_OUT_BACK
+    };
+
+    float Ease(float t, float b, float c, float d, EasingType easing_type);
+    float EaseLinear(float t, float b, float c, float d);
+    float EaseInCubic(float t, float b, float c, float d);
+    float EaseOutCubic(float t, float b, float c, float d);
+    float EaseInOutCubic(float t, float b, float c, float d);
+    float EaseInBack(float t, float b, float c, float d);
+    float EaseOutBack(float t, float b, float c, float d);
+    float EaseInOutBack(float t, float b, float c, float d);
 };
 
 #endif
