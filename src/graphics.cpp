@@ -1330,3 +1330,8 @@ void Graphics::ToggleVSync(const bool enabled)
 {
     glfwSwapInterval(enabled ? 1 : 0);
 }
+
+void Graphics::LoadMSDFFont(const std::string& font_atlas_file_name, const std::string& font_data_file_name)
+{
+    Texture* texture = LoadTexture(font_atlas_file_name, NEAREST);
+}
