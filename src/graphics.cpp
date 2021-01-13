@@ -19,6 +19,7 @@ std::unordered_map<std::string, Texture> Graphics::textures;
 std::map<uint8_t, uint32_t> Graphics::bound_textures;
 std::unordered_map<std::string, SpriteSheet*> Graphics::sprite_sheets;
 std::unordered_map<uint32_t, Sprite> Graphics::sprites;
+std::unordered_map<std::string, Graphics::MSDF_Font> Graphics::msdf_fonts;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
 std::string Graphics::activated_shader_id = "default";
@@ -1331,7 +1332,129 @@ void Graphics::ToggleVSync(const bool enabled)
     glfwSwapInterval(enabled ? 1 : 0);
 }
 
-void Graphics::LoadMSDFFont(const std::string& font_atlas_file_name, const std::string& font_data_file_name)
+Graphics::MSDF_Font* Graphics::LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name)
 {
-    Texture* texture = LoadTexture(font_atlas_file_name, NEAREST);
+    MSDF_Font* font = &msdf_fonts[font_id];
+
+    font->texture = LoadTexture(font_atlas_file_name, LINEAR);
+
+    std::ifstream file(font_data_file_name);
+
+    if(file.is_open())
+    {
+        std::string line;
+
+        // skip first line
+        std::getline(file, line);
+
+        while(std::getline(file, line))
+        {
+            MSDF_FontData data;
+            std::istringstream font_data_ss(line);
+            std::vector<std::string> fields;
+            fields.reserve(12);
+            std::string field;
+            while(std::getline(font_data_ss, field, ','))
+            {
+                fields.push_back(field);
+            }
+            data.id =        std::stoi(fields[0]);
+            data.index =     std::stoi(fields[1]);
+            data.width =     std::stoi(fields[2]);
+            data.unihex =    fields[3];
+            data.height =    std::stoi(fields[4]);
+            data.x_offset =  std::stoi(fields[5]);
+            data.y_offset =  std::stoi(fields[6]);
+            data.x_advance = std::stoi(fields[7]);
+            data.channel =   std::stoi(fields[8]);
+            data.x =         std::stoi(fields[9]);
+            data.y =         std::stoi(fields[10]);
+
+            font->font_data[data.id] = data;
+        }
+    }
+
+    return font;
+}
+
+void Graphics::RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    MSDF_Font* font = &msdf_fonts[font_id];
+    float atlas_width = font->texture->width;
+    float atlas_height = font->texture->height;
+
+    size_t str_len = text.length();
+    const char* text_c_str = text.c_str();
+
+    float x = position.x;
+
+    for(size_t i = 0; i < str_len; ++i)
+    {
+        int indices_count = 6;
+
+        DoBatchRenderSetUp(frame_buffer_index, font->texture->ID, indices_count);
+
+        char c = text_c_str[i];
+        int ascii_code = static_cast<int>(c);
+        MSDF_FontData font_data = font->font_data[ascii_code];
+
+        float tex_x = font_data.x / atlas_width;
+        float tex_y = font_data.y / atlas_height;
+        float tex_w = font_data.width / atlas_width;
+        float tex_h = font_data.height / atlas_height;
+
+        //x += font_data.x_offset;
+        //x += font_data.x_advance;
+        float y = position.y + font_data.y_offset;
+
+        // bottom right
+        batch.buffer_ptr->position.x = (x + font_data.width) * pixel_size;
+        batch.buffer_ptr->position.y = (y + font_data.height) * pixel_size;
+        batch.buffer_ptr->tex_coords.x = tex_x + tex_w;
+        batch.buffer_ptr->tex_coords.y = tex_y + tex_h;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+
+        // top right
+        batch.buffer_ptr->position.x = (x + font_data.width) * pixel_size;
+        batch.buffer_ptr->position.y = y * pixel_size;
+        batch.buffer_ptr->tex_coords.x = tex_x + tex_w;
+        batch.buffer_ptr->tex_coords.y = tex_y;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+
+        // top left
+        batch.buffer_ptr->position.x = x * pixel_size;
+        batch.buffer_ptr->position.y = y * pixel_size;
+        batch.buffer_ptr->tex_coords.x = tex_x;
+        batch.buffer_ptr->tex_coords.y = tex_y;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+
+        // bottom left
+        batch.buffer_ptr->position.x = x * pixel_size;
+        batch.buffer_ptr->position.y = (y + font_data.height) * pixel_size;
+        batch.buffer_ptr->tex_coords.x = tex_x;
+        batch.buffer_ptr->tex_coords.y = tex_y + tex_h;
+        batch.buffer_ptr->colour = colour;
+        batch.buffer_ptr++;
+
+        // first tri indices
+        batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+        batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+        batch.index_buffer[batch.index_count + 2] = 3 + batch.current_index_offset;
+
+        // second tri indices
+        batch.index_buffer[batch.index_count + 3] = 1 + batch.current_index_offset;
+        batch.index_buffer[batch.index_count + 4] = 2 + batch.current_index_offset;
+        batch.index_buffer[batch.index_count + 5] = 3 + batch.current_index_offset;
+
+        batch.current_index_offset += 4;
+        batch.index_count += indices_count;
+
+        //x += font_data.x_advance;
+        x += font_data.width;
+    }
 }

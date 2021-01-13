@@ -112,16 +112,17 @@ namespace Honeybear
 
         struct MSDF_FontData
         {
+            int id;
             int index;
+            int x;
+            int y;
             int width;
             int height;
-            int unihex;
             int x_offset;
             int y_offset;
             int x_advance;
             int channel;
-            int x;
-            int y;
+            std::string unihex;
         };
 
         struct MSDF_Font
@@ -135,6 +136,7 @@ namespace Honeybear
         extern std::map<uint8_t, uint32_t> bound_textures;
         extern std::unordered_map<std::string, SpriteSheet*> sprite_sheets;
         extern std::unordered_map<uint32_t, Sprite> sprites;
+        extern std::unordered_map<std::string, MSDF_Font> msdf_fonts;
         extern std::vector<FrameBuffer> frame_buffers;
         extern uint32_t current_frame_buffer_index;
 
@@ -177,7 +179,8 @@ namespace Honeybear
         Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
 
-        void LoadMSDFFont(const std::string& font_atlas_file_name, const std::string& font_data_file_name);
+        MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);
+        void RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
 
         void LoadSpritesFile(const std::string& file_name, const FilterType filter_type);
         SpriteSheet* LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type);

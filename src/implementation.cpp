@@ -23,16 +23,17 @@ Implementation::Implementation()
 
     // int window_width = 2560;
     // int window_height = 1440;
-    // int window_width = 1920;
-    // int window_height = 1080;
-    int window_width = 1280;
-    int window_height = 720;
+    int window_width = 1920;
+    int window_height = 1080;
+    // int window_width = 1280;
+    // int window_height = 720;
 
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);
 
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
+    Graphics::LoadShader("msdf_font",       nullptr, "res/shaders/msdf_font.frag");
 
     // SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
     // SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
@@ -47,11 +48,14 @@ Implementation::Implementation()
 
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
-    // ui_frame_buffer =           Graphics::AddFrameBuffer();
+    ui_frame_buffer =           Graphics::AddFrameBuffer();
 
     //Graphics::SetClearColour(Vec4(1.0f, 0.5f, 0.0f, 1.0f));
     //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
     palette = Graphics::LoadTexture("res/images/palette.png", Graphics::NEAREST);
+
+    Graphics::LoadMSDFFont("inconsolata", "res/fonts/inconsolata/inconsolata_msdf.png", "res/fonts/inconsolata/inconsolata_data.csv");
+    Graphics::LoadMSDFFont("davida",      "res/fonts/davida/davida_msdf.png",           "res/fonts/davida/davida_data.csv");
 
     std::cout << stbi_failure_reason() << std::endl;
 }
@@ -90,40 +94,46 @@ void Implementation::Draw()
     // Graphics::FillTriangle(Vec2(100.0f, 100.0f), Vec2(150.0f, 150.0f), Vec2(50.0f, 150.0f), ui_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
     // Graphics::FillTriangle(Vec2(200.0f, 200.0f), Vec2(250.0f, 250.0f), Vec2(150.0f, 250.0f), ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    Graphics::DrawCircle(Vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::DrawLine(Vec2(0.0f, 0.0f), Vec2(100.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    Graphics::DrawLine(Vec2(100.0f, 100.0f), Vec2(150.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
+    // Graphics::DrawCircle(Vec2(300.0f + test, 300.0f), 50.0f, another_test_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    // Graphics::DrawLine(Vec2(0.0f, 0.0f), Vec2(100.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    // Graphics::DrawLine(Vec2(100.0f, 100.0f), Vec2(150.0f, 100.0f), another_test_frame_buffer, Vec4(1.0f, 0.0f, 0.0f, 1.0f));
+    // Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
     //Graphics::FillCircle(Vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, Vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
     // Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
-    std::vector<Vec2> points;
-    points.emplace_back(0.0f, 0.0f);
-    points.emplace_back(50.0f, 50.0f);
-    points.emplace_back(40.0f, 75.0f);
-    points.emplace_back(0.0f, 100.0f);
-    points.emplace_back(-50.0f, 50.0f);
-    for(size_t i = 0; i < points.size(); ++i)
-    {
-        points[i].x += mouse_pos.x;
-        points[i].y += mouse_pos.y;
-    }
+    // std::vector<Vec2> points;
+    // points.emplace_back(0.0f, 0.0f);
+    // points.emplace_back(50.0f, 50.0f);
+    // points.emplace_back(40.0f, 75.0f);
+    // points.emplace_back(0.0f, 100.0f);
+    // points.emplace_back(-50.0f, 50.0f);
+    // for(size_t i = 0; i < points.size(); ++i)
+    // {
+    //     points[i].x += mouse_pos.x;
+    //     points[i].y += mouse_pos.y;
+    // }
 
-    Graphics::DrawPoly(points, another_test_frame_buffer, Vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    // Graphics::DrawPoly(points, another_test_frame_buffer, Vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
     // Graphics::DeactivateShader();
 
-    Graphics::ActivateShader("second_tex_test");
-    Graphics::SetShaderTexture("second_tex_test", "second_image", palette->ID, 1);
-    Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    // Graphics::ActivateShader("second_tex_test");
+    // Graphics::SetShaderTexture("second_tex_test", "second_image", palette->ID, 1);
+    // Graphics::FillRectangle(200.0f, 0.0f, 192.0f, 108.0f, another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    // Graphics::DeactivateShader();
+
+    // Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
+
+    Graphics::ActivateShader("msdf_font");
+    Graphics::RenderText("Honeybear!", Vec2(50.0f, 50.0f), "inconsolata", ui_frame_buffer);
+    Graphics::RenderText("Honeybear!", mouse_pos, "davida", ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    // Graphics::RenderText("Honeybear!", mouse_pos, "inconsolata", ui_frame_buffer);
     Graphics::DeactivateShader();
 
-    Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
-
-    Graphics::RenderFrameBuffer(test_frame_buffer);
+    // Graphics::RenderFrameBuffer(test_frame_buffer);
     // Graphics::RenderFrameBuffer(another_test_frame_buffer);
-    // Graphics::RenderFrameBuffer(ui_frame_buffer);
+    Graphics::RenderFrameBuffer(ui_frame_buffer);
 }
 
 bool full_screen = false;
