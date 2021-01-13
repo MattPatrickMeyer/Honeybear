@@ -65,6 +65,7 @@ namespace Honeybear
             Vec2 position;
             Vec2 tex_coords;
             Vec4 colour;
+            float pixel_range;
         };
 
         struct Batch
@@ -128,6 +129,7 @@ namespace Honeybear
         struct MSDF_Font
         {
             Texture* texture;
+            float tallest_char_height;
             std::map<int, MSDF_FontData> font_data;
         };
 
@@ -179,9 +181,6 @@ namespace Honeybear
         Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
 
-        MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);
-        void RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-
         void LoadSpritesFile(const std::string& file_name, const FilterType filter_type);
         SpriteSheet* LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type);
         void CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h);
@@ -213,6 +212,9 @@ namespace Honeybear
         void EndBatch();
         void FlushBatch();
         void DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, bool draw_lines = false);
+
+        MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);
+        void RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
     }
 };
 

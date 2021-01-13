@@ -13,7 +13,6 @@ uint32_t test_frame_buffer;
 uint32_t another_test_frame_buffer;
 uint32_t ui_frame_buffer;
 
-float test = 0.0f;
 Texture* palette;
 
 Implementation::Implementation()
@@ -61,6 +60,7 @@ Implementation::Implementation()
 }
 
 bool key_down = false;
+float test = 0.0f;
 
 void Implementation::Update(const float dt)
 {
@@ -68,6 +68,7 @@ void Implementation::Update(const float dt)
     {
         test += 10.0f * dt;
     }
+    test += dt;
 }
 
 void Implementation::Draw()
@@ -100,7 +101,7 @@ void Implementation::Draw()
     // Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
     //Graphics::FillCircle(Vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, Vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-    // Graphics::FillRectangle(50.0f + test, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
+    Graphics::FillRectangle(50.0f, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
     // std::vector<Vec2> points;
     // points.emplace_back(0.0f, 0.0f);
@@ -126,13 +127,14 @@ void Implementation::Draw()
     // Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
 
     Graphics::ActivateShader("msdf_font");
-    Graphics::RenderText("Honeybear!", Vec2(50.0f, 50.0f), "inconsolata", ui_frame_buffer);
-    Graphics::RenderText("Honeybear!", mouse_pos, "davida", ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "inconsolata", 20.0f, ui_frame_buffer);
+    Graphics::RenderText("Honeybear!", mouse_pos, "davida", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "inconsolata", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText("Honeybear!", mouse_pos, "inconsolata", ui_frame_buffer);
     Graphics::DeactivateShader();
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);
-    // Graphics::RenderFrameBuffer(another_test_frame_buffer);
+    Graphics::RenderFrameBuffer(another_test_frame_buffer);
     Graphics::RenderFrameBuffer(ui_frame_buffer);
 }
 

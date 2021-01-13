@@ -1,6 +1,8 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#define FPS_RECORD_COUNT 100
+
 #include <string>
 
 namespace Honeybear
@@ -10,6 +12,8 @@ namespace Honeybear
 
     struct Engine
     {
+        static int average_fps;
+
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
         void Render();
