@@ -1454,7 +1454,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.current_index_offset += 4;
         batch.index_count += indices_count;
 
-        //x += font_data.x_advance;
-        x += font_data.width;
+        x += font_data.x_advance;
+        // x += font_data.width;
     }
 }
