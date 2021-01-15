@@ -105,7 +105,9 @@ void Implementation::Draw()
     // Graphics::DrawRectangle(200.0f, 200.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f));
     //Graphics::FillCircle(Vec2(x_pos, y_pos), 20.0f, another_test_frame_buffer, Vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
-    Graphics::FillRectangle(50.0f, 300.0f, 100.0f, 50.0f, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
+    // float test_width, test_height;
+    // Graphics::CalcTextDimensions("This is a test :)", "roboto_mono", another_test, &test_width, &test_height);
+    // Graphics::FillRectangle(20.0f, 200.0f, test_width, test_height, another_test_frame_buffer, Vec4(1.0f, 0.5f, 0.0f, 1.0f));
 
     // std::vector<Vec2> points;
     // points.emplace_back(0.0f, 0.0f);
@@ -130,11 +132,15 @@ void Implementation::Draw()
 
     // Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
 
+    float fps_width, fps_height;
+    Graphics::CalcTextDimensions(std::to_string(Engine::average_fps), "roboto_mono", 5.0f, &fps_width, &fps_height);
+
     Graphics::ActivateShader("msdf_font");
     Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
     Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText(std::to_string(another_test), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::DeactivateShader();
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);

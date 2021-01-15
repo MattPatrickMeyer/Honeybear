@@ -1499,3 +1499,40 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         // x += font_data.width;
     }
 }
+
+void Graphics::CalcTextDimensions(const std::string& text, const std::string& font_id, const float size, float* width, float* height)
+{
+    float min_x = 0.0f;
+    float max_x = 0.0f;
+    float min_y = 0.0f;
+    float max_y = 0.0f;
+
+    float cursor_x = 0.0f;
+    float cursor_y = 0.0f;
+
+    MSDF_Font* font = &msdf_fonts[font_id];
+    size_t str_len = text.length();
+    const char* text_c_str = text.c_str();
+
+    for(size_t i = 0; i < str_len; ++i)
+    {
+        char c = text_c_str[i];
+        int ascii_code = static_cast<int>(c);
+        MSDF_CharData char_data = font->data[ascii_code];
+
+        float quad_left = cursor_x + (char_data.plane_bounds.left * size);
+        float quad_top = cursor_y + (char_data.plane_bounds.top * size);
+        float quad_right = cursor_x + (char_data.plane_bounds.right * size);
+        float quad_bottom = cursor_y + (char_data.plane_bounds.bottom * size);
+
+        if(quad_left < min_x)    min_x = quad_left;
+        if(quad_right > max_x)   max_x = quad_right;
+        if(quad_top < min_y)     min_y = quad_top;
+        if(quad_bottom > max_y)  max_y = quad_bottom;
+
+        cursor_x += char_data.advance * size;
+    }
+
+    *width = max_x - min_x;
+    *height = max_y - min_y;
+}

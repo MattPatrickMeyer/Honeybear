@@ -232,6 +232,7 @@ namespace Honeybear
 
         MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);
         void RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void CalcTextDimensions(const std::string& text, const std::string& font_id, const float size, float* width, float* height);
     }
 };
 

@@ -10,6 +10,7 @@ using namespace Honeybear;
 float Honeybear::game_width;
 float Honeybear::game_height;
 int Honeybear::Engine::average_fps;
+float Honeybear::Engine::last_frame_time;
 
 namespace
 {
@@ -42,6 +43,7 @@ void Engine::Run()
 
         const float current_time = Ticks();
         const float frame_time = current_time - last_update_time;
+        last_frame_time = frame_time;
 
         last_update_time = current_time;
 
@@ -62,6 +64,7 @@ void Engine::Run()
 
         Render();
 
+        // -- calc average frame rate --
         fps_records[fps_record_index] = 1.0f / frame_time;
         fps_record_index = (fps_record_index + 1) % 100;
 
@@ -71,6 +74,7 @@ void Engine::Run()
             total += fps_records[i];
         }
         average_fps = int(total / FPS_RECORD_COUNT);
+        // -----------------------------
 
         Input::BeginNewFrame();
         glfwPollEvents();
@@ -91,12 +95,6 @@ void Engine::Render()
     Graphics::ClearFrameBuffers();
 
     Draw();
-
-    Graphics::ActivateShader("msdf_font");
-    Graphics::RenderText(std::to_string(average_fps), Vec2(0.0f), "roboto_mono", 10.0f, test_frame, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::DeactivateShader();
-
-    Graphics::RenderFrameBuffer(test_frame);
 
     // todo: check this is needed
     Graphics::EndBatch();

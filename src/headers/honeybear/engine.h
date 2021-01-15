@@ -13,6 +13,7 @@ namespace Honeybear
     struct Engine
     {
         static int average_fps;
+        static float last_frame_time;
 
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
