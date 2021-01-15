@@ -111,6 +111,22 @@ namespace Honeybear
             int height;
         };
 
+        struct Bounds
+        {
+            float left;
+            float right;
+            float top;
+            float bottom;
+        };
+
+        struct MSDF_CharData
+        {
+            int unicode;
+            float advance;
+            Bounds plane_bounds;
+            Bounds atlas_bounds;
+        };
+
         struct MSDF_FontData
         {
             int id;
@@ -130,6 +146,7 @@ namespace Honeybear
         {
             Texture* texture;
             float tallest_char_height;
+            std::map<int, MSDF_CharData> data;
             std::map<int, MSDF_FontData> font_data;
         };
 

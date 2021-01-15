@@ -93,7 +93,7 @@ void Engine::Render()
     Draw();
 
     Graphics::ActivateShader("msdf_font");
-    Graphics::RenderText(std::to_string(average_fps), Vec2(0.0f), "inconsolata", 10.0f, test_frame, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(average_fps), Vec2(0.0f), "roboto_mono", 10.0f, test_frame, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::DeactivateShader();
 
     Graphics::RenderFrameBuffer(test_frame);

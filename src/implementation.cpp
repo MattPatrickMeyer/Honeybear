@@ -1,4 +1,5 @@
 //#include <Windows.h>
+#include <math.h>
 #include <iostream>
 #include <algorithm>
 #include "implementation.h"
@@ -53,14 +54,15 @@ Implementation::Implementation()
     //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
     palette = Graphics::LoadTexture("res/images/palette.png", Graphics::NEAREST);
 
-    Graphics::LoadMSDFFont("inconsolata", "res/fonts/inconsolata/inconsolata_msdf.png", "res/fonts/inconsolata/inconsolata_data.csv");
-    Graphics::LoadMSDFFont("davida",      "res/fonts/davida/davida_msdf.png",           "res/fonts/davida/davida_data.csv");
+    Graphics::LoadMSDFFont("roboto_mono",   "res/fonts/roboto_mono/atlas.png", "res/fonts/roboto_mono/data.csv");
 
     std::cout << stbi_failure_reason() << std::endl;
 }
 
 bool key_down = false;
 float test = 0.0f;
+float angle = 0.0f;
+float another_test = 20.0f;
 
 void Implementation::Update(const float dt)
 {
@@ -69,6 +71,8 @@ void Implementation::Update(const float dt)
         test += 10.0f * dt;
     }
     test += dt;
+    angle += dt;
+    another_test = (std::sin(angle) * 200) + 200;
 }
 
 void Implementation::Draw()
@@ -127,10 +131,10 @@ void Implementation::Draw()
     // Graphics::RenderFrameBufferToFrameBuffer(another_test_frame_buffer, test_frame_buffer);
 
     Graphics::ActivateShader("msdf_font");
-    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "inconsolata", 20.0f, ui_frame_buffer);
-    Graphics::RenderText("Honeybear!", mouse_pos, "davida", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "inconsolata", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    // Graphics::RenderText("Honeybear!", mouse_pos, "inconsolata", ui_frame_buffer);
+    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
+    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(another_test), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     Graphics::DeactivateShader();
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);

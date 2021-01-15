@@ -580,7 +580,9 @@ SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, con
 Texture* Graphics::LoadTexture(const std::string& texture_file_name, const FilterType filter_type)
 {
     int width, height, nrChannels;
-    unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, 0);
+    int desired_channels = 4; // 4 channels as we always want RGBA for the glTexImage2D function below
+    unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, desired_channels);
+    std::cout << stbi_failure_reason() << std::endl;
 
     GLuint filter = GL_LINEAR;
     if(filter_type == NEAREST) filter = GL_NEAREST;
@@ -1349,37 +1351,37 @@ Graphics::MSDF_Font* Graphics::LoadMSDFFont(const std::string& font_id, const st
     {
         std::string line;
 
-        // skip first line
-        std::getline(file, line);
-
         while(std::getline(file, line))
         {
-            MSDF_FontData data;
-            std::istringstream font_data_ss(line);
+            MSDF_CharData data;
+
+            std::istringstream char_data_ss(line);
             std::vector<std::string> fields;
-            fields.reserve(12);
+            fields.reserve(10);
             std::string field;
-            while(std::getline(font_data_ss, field, ','))
+            while(std::getline(char_data_ss, field, ','))
             {
                 fields.push_back(field);
             }
-            data.id =        std::stoi(fields[0]);
-            data.index =     std::stoi(fields[1]);
-            data.width =     std::stoi(fields[2]);
-            data.unihex =    fields[3];
-            data.height =    std::stoi(fields[4]);
-            data.x_offset =  std::stoi(fields[5]);
-            data.y_offset =  std::stoi(fields[6]);
-            data.x_advance = std::stoi(fields[7]);
-            data.channel =   std::stoi(fields[8]);
-            data.x =         std::stoi(fields[9]);
-            data.y =         std::stoi(fields[10]);
 
-            font->font_data[data.id] = data;
+            data.unicode =             std::stoi(fields[0]);
+            data.advance =             std::stof(fields[1]);
+            data.plane_bounds.left =   std::stof(fields[2]);
+            data.plane_bounds.bottom = 1.0f - std::stof(fields[3]);
+            data.plane_bounds.right =  std::stof(fields[4]);
+            data.plane_bounds.top =    1.0f - std::stof(fields[5]);
+            data.atlas_bounds.left =   std::stof(fields[6]);
+            data.atlas_bounds.bottom = font->texture->height - std::stof(fields[7]);
+            data.atlas_bounds.right =  std::stof(fields[8]);
+            data.atlas_bounds.top =    font->texture->height - std::stof(fields[9]);
 
-            if(data.height > font->tallest_char_height)
+            font->data[data.unicode] = data;
+
+            float height = data.atlas_bounds.bottom - data.atlas_bounds.top;
+
+            if(height > font->tallest_char_height)
             {
-                font->tallest_char_height = data.height;
+                font->tallest_char_height = height;
             }
         }
     }
@@ -1390,13 +1392,15 @@ Graphics::MSDF_Font* Graphics::LoadMSDFFont(const std::string& font_id, const st
 void Graphics::RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
-    float pixel_range = 9.0f;
+    float pixel_range = 10.0f;
 
     // todo: dumb
     if(size * pixel_size <= 30.0f)
     {
         pixel_range = 20.0f;
     }
+
+    float adjusted_size = size * pixel_size;
 
     MSDF_Font* font = &msdf_fonts[font_id];
     float atlas_width = font->texture->width;
@@ -1405,9 +1409,10 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
     size_t str_len = text.length();
     const char* text_c_str = text.c_str();
 
-    float size_mod = size / font->tallest_char_height;
+    //float size_mod = size / font->tallest_char_height;
 
-    float x = position.x;
+    float cursor_x = position.x * pixel_size;
+    float cursor_y = position.y * pixel_size;
 
     for(size_t i = 0; i < str_len; ++i)
     {
@@ -1421,58 +1426,57 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         // handle spaces
         if(ascii_code == 32)
         {
-            // make a 'space' the width of an 'M' char
-            int m_code = 77;
-            MSDF_FontData font_data = font->font_data[m_code];
-            x += font_data.x_advance * size_mod;
+            // don't render anything for a space, just move the cursor
+            MSDF_CharData char_data = font->data[ascii_code];
+            cursor_x += char_data.advance * adjusted_size;
             continue;
         }
 
-        MSDF_FontData font_data = font->font_data[ascii_code];
+        MSDF_CharData char_data = font->data[ascii_code];
 
-        float tex_x = font_data.x / atlas_width;
-        float tex_y = font_data.y / atlas_height;
-        float tex_w = font_data.width / atlas_width;
-        float tex_h = font_data.height / atlas_height;
+        // todo: just calculate these at import??
+        float tex_left = char_data.atlas_bounds.left / atlas_width;
+        float tex_top = char_data.atlas_bounds.top / atlas_height;
+        float tex_right = char_data.atlas_bounds.right / atlas_width;
+        float tex_bottom = char_data.atlas_bounds.bottom / atlas_height;
 
-        //x += font_data.x_offset;
-        //x += font_data.x_advance;
-        float y = position.y + (font_data.y_offset * size_mod);
-        float width = font_data.width * size_mod;
-        float height = font_data.height * size_mod;
+        float quad_left = cursor_x + (char_data.plane_bounds.left * adjusted_size);
+        float quad_top = cursor_y + (char_data.plane_bounds.top * adjusted_size);
+        float quad_right = cursor_x + (char_data.plane_bounds.right * adjusted_size);
+        float quad_bottom = cursor_y + (char_data.plane_bounds.bottom * adjusted_size);
 
         // bottom right
-        batch.buffer_ptr->position.x = (x + width) * pixel_size;
-        batch.buffer_ptr->position.y = (y + height) * pixel_size;
-        batch.buffer_ptr->tex_coords.x = tex_x + tex_w;
-        batch.buffer_ptr->tex_coords.y = tex_y + tex_h;
+        batch.buffer_ptr->position.x = quad_right;
+        batch.buffer_ptr->position.y = quad_bottom;
+        batch.buffer_ptr->tex_coords.x = tex_right;
+        batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
         batch.buffer_ptr->pixel_range = pixel_range;
         batch.buffer_ptr++;
 
         // top right
-        batch.buffer_ptr->position.x = (x + width) * pixel_size;
-        batch.buffer_ptr->position.y = y * pixel_size;
-        batch.buffer_ptr->tex_coords.x = tex_x + tex_w;
-        batch.buffer_ptr->tex_coords.y = tex_y;
+        batch.buffer_ptr->position.x = quad_right;
+        batch.buffer_ptr->position.y = quad_top;
+        batch.buffer_ptr->tex_coords.x = tex_right;
+        batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
         batch.buffer_ptr->pixel_range = pixel_range;
         batch.buffer_ptr++;
 
         // top left
-        batch.buffer_ptr->position.x = x * pixel_size;
-        batch.buffer_ptr->position.y = y * pixel_size;
-        batch.buffer_ptr->tex_coords.x = tex_x;
-        batch.buffer_ptr->tex_coords.y = tex_y;
+        batch.buffer_ptr->position.x = quad_left;
+        batch.buffer_ptr->position.y = quad_top;
+        batch.buffer_ptr->tex_coords.x = tex_left;
+        batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
         batch.buffer_ptr->pixel_range = pixel_range;
         batch.buffer_ptr++;
 
         // bottom left
-        batch.buffer_ptr->position.x = x * pixel_size;
-        batch.buffer_ptr->position.y = (y + height) * pixel_size;
-        batch.buffer_ptr->tex_coords.x = tex_x;
-        batch.buffer_ptr->tex_coords.y = tex_y + tex_h;
+        batch.buffer_ptr->position.x = quad_left;
+        batch.buffer_ptr->position.y = quad_bottom;
+        batch.buffer_ptr->tex_coords.x = tex_left;
+        batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
         batch.buffer_ptr->pixel_range = pixel_range;
         batch.buffer_ptr++;
@@ -1490,7 +1494,8 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.current_index_offset += 4;
         batch.index_count += indices_count;
 
-        x += font_data.x_advance * size_mod;
+        //x += char_data.advance * size * size_mod;
+        cursor_x += char_data.advance * adjusted_size;
         // x += font_data.width;
     }
 }
