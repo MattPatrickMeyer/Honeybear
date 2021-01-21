@@ -9,6 +9,7 @@ using namespace Honeybear;
 
 float Honeybear::game_width;
 float Honeybear::game_height;
+float Honeybear::game_speed = 1.0f;
 int Honeybear::Engine::average_fps;
 float Honeybear::Engine::last_frame_time;
 
@@ -52,14 +53,15 @@ void Engine::Run()
             float total_frame_time = frame_time;
             while(total_frame_time > 0.0f)
             {
-                float dt = std::min(total_frame_time, MAX_TIME_STEP);
+                float dt = std::min(total_frame_time, MAX_TIME_STEP) * game_speed;
                 total_frame_time -= MAX_TIME_STEP;
                 Update(dt);
             }
         }
         else
         {
-            Update(frame_time);
+            float dt = frame_time * game_speed;
+            Update(dt);
         }
 
         Render();

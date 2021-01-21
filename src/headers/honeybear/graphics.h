@@ -65,7 +65,7 @@ namespace Honeybear
             Vec2 position;
             Vec2 tex_coords;
             Vec4 colour;
-            float pixel_range;
+            float font_weight;
         };
 
         struct Batch
@@ -176,6 +176,7 @@ namespace Honeybear
         void UpdateScreenRenderData();
 
         void ChangeResolution(const uint32_t width, const uint32_t height);
+        void GetResolution(int* width, int* height);
         void ToggleFullscreen(const bool enabled);
         void ToggleVSync(const bool enabled);
 
@@ -218,9 +219,11 @@ namespace Honeybear
         void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 
         uint32_t AddFrameBuffer();
-        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution = false);
+        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool auto_pixel_scale = true, const bool mapped_to_window_resolution = false);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
+        void RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset);
         void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);
+        void RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index, const float x, const float y, const float w, const float h, const uint32_t dest_frame_buffer_index, const Vec4& colour = Vec4(1.0f));
         void BindFrameBuffer(const uint32_t frame_buffer_index);
         void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
 

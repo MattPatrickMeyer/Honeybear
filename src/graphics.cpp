@@ -50,7 +50,7 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
-const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float pixel_range;\nout vec2 TexCoords;\nout vec4 Colour;\nout float PixelRange;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nPixelRange = pixel_range;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
+const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
 const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
 
 void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::string& window_title)
@@ -251,9 +251,9 @@ void Graphics::InitBatchRenderer()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
 
-    // pixel range
+    // font weight
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, pixel_range));
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, font_weight));
 
     // set up index element buffer
     glGenBuffers(1, &batch.IB);
@@ -1099,10 +1099,10 @@ uint32_t Graphics::AddFrameBuffer()
 {
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
-    return AddFrameBuffer(window_width, window_height, true);
+    return AddFrameBuffer(window_width, window_height, true, true);
 }
 
-uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool mapped_to_window_resolution)
+uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool auto_pixel_scale, const bool mapped_to_window_resolution)
 {
     frame_buffers.push_back(FrameBuffer());
     uint32_t frame_buffer_index = frame_buffers.size() - 1;
@@ -1124,7 +1124,7 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = width / Honeybear::game_width;
+    frame_buffer->game_pixel_size = auto_pixel_scale ? width / Honeybear::game_width : 1.0f; // todo: janky as fuck
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
 
     // ----------------------------------------------------------------------------
@@ -1284,6 +1284,30 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
     glBindVertexArray(0);
 }
 
+void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+
+    // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
+    EndBatch();
+    FlushBatch();
+    BeginBatch();
+
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    glViewport(0, 0, window_width, window_height);
+
+    // frame buffer textures are upside down, so use a projection that will flip them the right way
+    SetShaderProjection(activated_shader_id, 0.0f - offset.x, (float)window_width - offset.x, (float)window_height - offset.y, 0.0f - offset.y, -1.0f, 1.0f);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    current_fbo = 0;
+    BindTexture(frame_buffer->tex_colour_buffer, 0);
+    glBindVertexArray(screen_render_data.quad_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+}
+
 void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index)
 {
     FrameBuffer* source_frame_buffer = &frame_buffers[source_frame_buffer_index];
@@ -1294,6 +1318,60 @@ void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer
     glBindVertexArray(dest_frame_buffer->quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+}
+
+void Graphics::RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index, const float x, const float y, const float w, const float h, const uint32_t dest_frame_buffer_index, const Vec4& colour)
+{
+    int indices_count = 6;
+
+    DoBatchRenderSetUp(dest_frame_buffer_index, frame_buffers[source_frame_buffer_index].tex_colour_buffer, indices_count);
+
+    float pixel_size = frame_buffers[dest_frame_buffer_index].game_pixel_size;
+
+    // bottom right
+    batch.buffer_ptr->position.x = (x + w) * pixel_size;
+    batch.buffer_ptr->position.y = (y + h) * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 1.0f;
+    batch.buffer_ptr->tex_coords.y = 1.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // top right
+    batch.buffer_ptr->position.x = (x + w) * pixel_size;
+    batch.buffer_ptr->position.y = y * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 1.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // top left
+    batch.buffer_ptr->position.x = x * pixel_size;
+    batch.buffer_ptr->position.y = y * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 0.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // bottom left
+    batch.buffer_ptr->position.x = x * pixel_size;
+    batch.buffer_ptr->position.y = (y + h) * pixel_size;
+    batch.buffer_ptr->tex_coords.x = 0.0f;
+    batch.buffer_ptr->tex_coords.y = 1.0f;
+    batch.buffer_ptr->colour = colour;
+    batch.buffer_ptr++;
+
+    // first tri indices
+    batch.index_buffer[batch.index_count + 0] = 0 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 1] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 2] = 3 + batch.current_index_offset;
+
+    // second tri indices
+    batch.index_buffer[batch.index_count + 3] = 1 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 4] = 2 + batch.current_index_offset;
+    batch.index_buffer[batch.index_count + 5] = 3 + batch.current_index_offset;
+
+    batch.current_index_offset += 4;
+    batch.index_count += indices_count;
 }
 
 void Graphics::ChangeResolution(const uint32_t width, const uint32_t height)
@@ -1318,6 +1396,11 @@ void Graphics::ChangeResolution(const uint32_t width, const uint32_t height)
 
     // update the quad VAO that is used for rendering framebuffers to the screen
     UpdateScreenRenderData();
+}
+
+void Graphics::GetResolution(int* width, int* height)
+{
+    glfwGetWindowSize(window, width, height);
 }
 
 void Graphics::ToggleFullscreen(const bool enabled)
@@ -1392,15 +1475,15 @@ Graphics::MSDF_Font* Graphics::LoadMSDFFont(const std::string& font_id, const st
 void Graphics::RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
-    float pixel_range = 10.0f;
+    float adjusted_size = size * pixel_size;
+
+    float font_weight = 0.5f;
 
     // todo: dumb
-    if(size * pixel_size <= 30.0f)
+    if(adjusted_size <= 30.0f)
     {
-        pixel_range = 20.0f;
+        font_weight = 1.0f;
     }
-
-    float adjusted_size = size * pixel_size;
 
     MSDF_Font* font = &msdf_fonts[font_id];
     float atlas_width = font->texture->width;
@@ -1451,7 +1534,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_right;
         batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->pixel_range = pixel_range;
+        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // top right
@@ -1460,7 +1543,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_right;
         batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->pixel_range = pixel_range;
+        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // top left
@@ -1469,7 +1552,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_left;
         batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->pixel_range = pixel_range;
+        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // bottom left
@@ -1478,7 +1561,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_left;
         batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->pixel_range = pixel_range;
+        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // first tri indices
@@ -1532,6 +1615,9 @@ void Graphics::CalcTextDimensions(const std::string& text, const std::string& fo
 
         cursor_x += char_data.advance * size;
     }
+
+    // todo: temp hack
+    max_x = cursor_x;
 
     *width = max_x - min_x;
     *height = max_y - min_y;

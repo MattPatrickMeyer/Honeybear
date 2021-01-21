@@ -9,6 +9,7 @@ namespace Honeybear
 {
     extern float game_width;
     extern float game_height;
+    extern float game_speed;
 
     struct Engine
     {
