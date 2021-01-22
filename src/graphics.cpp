@@ -268,7 +268,7 @@ void Graphics::InitBatchRenderer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     uint32_t colour = 0xffffffff;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &colour);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &colour);
 
     // unbind everything
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -291,7 +291,7 @@ void Graphics::Clear()
 
 void Graphics::ClearFrameBuffers()
 {
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
     for(size_t i = 0; i < frame_buffers.size(); ++i)
     {
         FrameBuffer* frame_buffer = &frame_buffers[i];
@@ -991,6 +991,15 @@ void Graphics::FlushBatch()
     batch.index_count = 0;
     batch.current_index_offset = 0;
     glBindVertexArray(0);
+
+    FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
+    if(current_frame_buffer->multisampled)
+    {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, current_frame_buffer->FBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_frame_buffer->intermediate_FBO);
+        glBlitFramebuffer(0, 0, current_frame_buffer->width, current_frame_buffer->height, 0, 0, current_frame_buffer->width, current_frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_FRAMEBUFFER, current_frame_buffer->FBO);
+    }
 }
 
 void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, bool draw_lines)
@@ -1093,6 +1102,115 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 
     // make sure the shader projection matrix is set up
     SetShaderProjection(activated_shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
+}
+
+uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height)
+{
+    frame_buffers.push_back(FrameBuffer());
+    uint32_t frame_buffer_index = frame_buffers.size() - 1;
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+
+    // ---------------------------------------------------
+    glGenFramebuffers(1, &frame_buffer->FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+
+    glGenTextures(1, &frame_buffer->tex_colour_buffer);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA, width, height, GL_TRUE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer, 0);
+    // ---------------------------------------------------
+
+    // ---------------------------------------------------
+    glGenFramebuffers(1, &frame_buffer->intermediate_FBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->intermediate_FBO);
+
+    glGenTextures(1, &frame_buffer->intermediate_tex_colour_buffer);
+    glBindTexture(GL_TEXTURE_2D, frame_buffer->intermediate_tex_colour_buffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->intermediate_tex_colour_buffer, 0);
+    // ---------------------------------------------------
+
+    frame_buffer->width = width;
+    frame_buffer->height = height;
+    frame_buffer->game_pixel_size = 1.0f;
+    frame_buffer->mapped_to_window_resolution = false;
+    frame_buffer->multisampled = true;
+
+    // ----------------------------------------------------------------------------
+    // set up the VAO used to for rendering another framebuffer to this framebuffer
+    // ----------------------------------------------------------------------------
+    glGenVertexArrays(1, &frame_buffer->quad_VAO);
+    glBindVertexArray(frame_buffer->quad_VAO);
+
+    glGenBuffers(1, &frame_buffer->quad_VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, frame_buffer->quad_VBO);
+
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Vertex buffer[4];
+    // bottom right
+    buffer[0].position.x = width;
+    buffer[0].position.y = height;
+    buffer[0].tex_coords.x = 1.0f;
+    buffer[0].tex_coords.y = 1.0f;
+    buffer[0].colour = colour;
+    // top right
+    buffer[1].position.x = width;
+    buffer[1].position.y = 0.0f;
+    buffer[1].tex_coords.x = 1.0f;
+    buffer[1].tex_coords.y = 0.0f;
+    buffer[1].colour = colour;
+    // top left
+    buffer[2].position.x = 0.0f;
+    buffer[2].position.y = 0.0f;
+    buffer[2].tex_coords.x = 0.0f;
+    buffer[2].tex_coords.y = 0.0f;
+    buffer[2].colour = colour;
+    // bottom left
+    buffer[3].position.x = 0.0f;
+    buffer[3].position.y = height;
+    buffer[3].tex_coords.x = 0.0f;
+    buffer[3].tex_coords.y = 1.0f;
+    buffer[3].colour = colour;
+
+    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+
+    // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
+
+    // tex coords
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, tex_coords));
+
+    // colour
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
+
+    uint32_t indices[] = {
+        0, 1, 3,
+        1, 2, 3
+    };
+
+    glGenBuffers(1, &frame_buffer->quad_IB);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, frame_buffer->quad_IB);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    // ----------------------------------------------------------------------------
+
+    // if this is the first frame buffer, bind it?
+    if(frame_buffer_index == 0)
+    {
+        BindFrameBuffer(frame_buffer_index);
+    }
+
+    return frame_buffer_index;
 }
 
 uint32_t Graphics::AddFrameBuffer()
@@ -1324,7 +1442,10 @@ void Graphics::RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index,
 {
     int indices_count = 6;
 
-    DoBatchRenderSetUp(dest_frame_buffer_index, frame_buffers[source_frame_buffer_index].tex_colour_buffer, indices_count);
+    FrameBuffer* src = &frame_buffers[source_frame_buffer_index];
+    GLuint tex_buffer = src->multisampled ? src->intermediate_tex_colour_buffer : src->tex_colour_buffer;
+
+    DoBatchRenderSetUp(dest_frame_buffer_index, tex_buffer, indices_count);
 
     float pixel_size = frame_buffers[dest_frame_buffer_index].game_pixel_size;
 

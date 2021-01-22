@@ -14,6 +14,7 @@ uint32_t test_frame_buffer;
 uint32_t another_test_frame_buffer;
 uint32_t ui_frame_buffer;
 uint32_t little_frame_buffer;
+uint32_t multi_sample_frame_buffer;
 
 Texture* palette;
 
@@ -51,6 +52,7 @@ Implementation::Implementation()
     another_test_frame_buffer = Graphics::AddFrameBuffer();
     ui_frame_buffer =           Graphics::AddFrameBuffer();
     little_frame_buffer =       Graphics::AddFrameBuffer(100.0f, 100.0f, false);
+    multi_sample_frame_buffer = Graphics::AddMultiSampledFrameBuffer(200.0f, 200.0f);
 
     //Graphics::SetClearColour(Vec4(1.0f, 0.5f, 0.0f, 1.0f));
     //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
@@ -62,6 +64,7 @@ Implementation::Implementation()
 }
 
 bool key_down = false;
+float x_test = 0.0f;
 float test = 0.0f;
 float angle = 0.0f;
 float another_test = 20.0f;
@@ -70,7 +73,7 @@ void Implementation::Update(const float dt)
 {
     if(key_down)
     {
-        test += 10.0f * dt;
+        x_test += 10.0f * dt;
     }
     test += dt;
     angle += dt;
@@ -144,17 +147,27 @@ void Implementation::Draw()
     Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 5.0f, &game_speed_width, &game_speed_height);
 
     Graphics::ActivateShader("msdf_font");
-    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
-    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(Honeybear::game_width - frame_time_width, fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(Honeybear::game_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    // Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
+    // Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    // Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    // Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    // Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(Honeybear::game_width - frame_time_width, fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    // Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(Honeybear::game_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::DeactivateShader();
 
-    Graphics::FillRectangle(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));
-    Graphics::RenderFrameBufferToQuad(little_frame_buffer, 100.0f, 100.0f, 100.0f, 100.0f, ui_frame_buffer);
+    // Graphics::FillRectangle(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));
+    // Graphics::RenderFrameBufferToQuad(little_frame_buffer, 100.0f, 100.0f, 100.0f, 100.0f, ui_frame_buffer);
+
+    Graphics::FillTriangle(Vec2(0.0f + x_test, 0.0f), Vec2(150.0f + x_test, 200.0f), Vec2(0.0f + x_test, 200.0f), multi_sample_frame_buffer, Vec4(1.0f));
+
+    // glBindFramebuffer(GL_READ_FRAMEBUFFER, Graphics::frame_buffers[multi_sample_frame_buffer].FBO);
+    // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, Graphics::frame_buffers[multi_sample_frame_buffer].intermediate_FBO);
+    // glBlitFramebuffer(0, 0, 200, 200, 0, 0, 200, 200, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    Graphics::RenderFrameBufferToQuad(multi_sample_frame_buffer, 100.0f, 100.0f, 200.0f / 3.0f, 200.0f / 3.0f, ui_frame_buffer);
+
+    Graphics::FillTriangle(Vec2(100.0f / 3 + x_test, 0.0f), Vec2(250.0f / 3 + x_test, 200.0f / 3), Vec2(100.0f / 3 + x_test, 200.0f / 3), ui_frame_buffer, Vec4(1.0f));
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);

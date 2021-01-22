@@ -88,8 +88,13 @@ namespace Honeybear
 
         struct FrameBuffer
         {
+            // the main frame buffer and texture buffer
             GLuint FBO;
             GLuint tex_colour_buffer;
+
+            // the intermediate frame buffer and texture buffer used for rendering multisampled buffer
+            GLuint intermediate_FBO;
+            GLuint intermediate_tex_colour_buffer;
 
             GLuint quad_VAO;
             GLuint quad_VBO;
@@ -99,6 +104,7 @@ namespace Honeybear
             float height;
             float game_pixel_size;
             bool mapped_to_window_resolution;
+            bool multisampled;
         };
 
         struct ScreenRenderData
@@ -220,10 +226,12 @@ namespace Honeybear
 
         uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool auto_pixel_scale = true, const bool mapped_to_window_resolution = false);
+        uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset);
         void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);
         void RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index, const float x, const float y, const float w, const float h, const uint32_t dest_frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void BlitFrameBuffer(const uint32_t source_frame_buffer_index, const Vec2& source_pos, const Vec2& source_size, const uint32_t dest_frame_buffer_index, const Vec2& dest_pos, const Vec2& dest_size);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
         void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
 
