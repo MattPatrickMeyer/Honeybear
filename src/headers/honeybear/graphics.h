@@ -103,8 +103,10 @@ namespace Honeybear
             float width;
             float height;
             float game_pixel_size;
+            bool use_game_pixel_scaling;
             bool mapped_to_window_resolution;
             bool multisampled;
+            uint32_t samples;
         };
 
         struct ScreenRenderData
@@ -225,8 +227,9 @@ namespace Honeybear
         void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 
         uint32_t AddFrameBuffer();
-        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool auto_pixel_scale = true, const bool mapped_to_window_resolution = false);
-        uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height);
+        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
+        uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);
+        uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset);
         void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);

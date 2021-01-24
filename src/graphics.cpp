@@ -22,7 +22,7 @@ std::unordered_map<uint32_t, Sprite> Graphics::sprites;
 std::unordered_map<std::string, Graphics::MSDF_Font> Graphics::msdf_fonts;
 std::vector<Graphics::FrameBuffer> Graphics::frame_buffers;
 uint32_t Graphics::current_frame_buffer_index;
-std::string Graphics::activated_shader_id = "default";
+std::string Graphics::activated_shader_id;
 GLFWwindow* Graphics::window;
 Graphics::Batch Graphics::batch;
 Graphics::ScreenRenderData Graphics::screen_render_data;
@@ -403,12 +403,12 @@ void Graphics::CreateShaderProgram(const std::string& shader_id, const char* ver
 
 void Graphics::ActivateShader(const std::string& shader_id)
 {
-    if(shader_id != activated_shader_id)
+    if(shader_id == activated_shader_id)
     {
-        EndBatch();
-        FlushBatch();
-        BeginBatch();
+        return;
     }
+
+    CheckAndStartNewBatch();
 
     FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
     glUseProgram(shaders[shader_id]);
@@ -421,10 +421,6 @@ void Graphics::ActivateShader(const std::string& shader_id)
 
 void Graphics::DeactivateShader()
 {
-    EndBatch();
-    FlushBatch();
-    BeginBatch();
-
     // when we deactivate a shader, activate the default one
     ActivateShader("default");
 }
@@ -992,13 +988,21 @@ void Graphics::FlushBatch()
     batch.current_index_offset = 0;
     glBindVertexArray(0);
 
+    // todo: probably not the best (fastest) place to put this
+    // - the frame buffer only needs to be blitted if it's actually being used/rendered
+    // - should probably put it in renderframebuffer or similar
     FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
     if(current_frame_buffer->multisampled)
     {
+        std::string current_shader = activated_shader_id;
+        ActivateShader("default");
+
         glBindFramebuffer(GL_READ_FRAMEBUFFER, current_frame_buffer->FBO);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_frame_buffer->intermediate_FBO);
         glBlitFramebuffer(0, 0, current_frame_buffer->width, current_frame_buffer->height, 0, 0, current_frame_buffer->width, current_frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, current_frame_buffer->FBO);
+
+        ActivateShader(current_shader);
     }
 }
 
@@ -1032,9 +1036,7 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
 
     if(should_start_new_batch)
     {
-        EndBatch();
-        FlushBatch();
-        BeginBatch();
+        CheckAndStartNewBatch();
     }
 
     if(should_bind_texture)
@@ -1070,29 +1072,10 @@ void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet,
     sprites[sprite_id].texture_h = tex_h / texture_height;
 }
 
-// void Graphics::CreateSprite(const uint32_t sprite_id, const std::string& texture_id, float tex_x, float tex_y, float tex_w, float tex_h)
-// {
-//     sprites[sprite_id].texture_id = texture_id;
-//     sprites[sprite_id].width = tex_w;
-//     sprites[sprite_id].height = tex_h;
-
-//     Texture* texture = &textures[texture_id];
-//     float texture_width = texture->width;
-//     float texture_height = texture->height;
-
-//     sprites[sprite_id].texture_x = tex_x / texture_width;
-//     sprites[sprite_id].texture_y = tex_y / texture_height;
-//     sprites[sprite_id].texture_w = tex_w / texture_width;
-//     sprites[sprite_id].texture_h = tex_h / texture_height;
-// }
-
 void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
 {
     // flush any batched quads to the previous frame buffer
-    EndBatch();
-    FlushBatch();
-    // whenever we bind a new frame buffer, start a new batch
-    BeginBatch();
+    CheckAndStartNewBatch();
 
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
     glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
@@ -1104,8 +1087,16 @@ void Graphics::BindFrameBuffer(const uint32_t frame_buffer_index)
     SetShaderProjection(activated_shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
 }
 
-uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height)
+uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t samples)
 {
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    return AddMultiSampledFrameBuffer(window_width, window_height, samples, true, true);
+}
+
+uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples, const bool use_game_pixel_scaling, const bool mapped_to_window_resolution)
+{
+    // todo: cleanup: mostly copy paste from AddFrameBuffer
     frame_buffers.push_back(FrameBuffer());
     uint32_t frame_buffer_index = frame_buffers.size() - 1;
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
@@ -1116,7 +1107,7 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
 
     glGenTextures(1, &frame_buffer->tex_colour_buffer);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA, width, height, GL_TRUE);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, GL_RGBA, width, height, GL_TRUE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer, 0);
     // ---------------------------------------------------
@@ -1134,11 +1125,15 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->intermediate_tex_colour_buffer, 0);
     // ---------------------------------------------------
 
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = 1.0f;
-    frame_buffer->mapped_to_window_resolution = false;
+    frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f;
+    frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
+    frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = true;
+    frame_buffer->samples = samples;
 
     // ----------------------------------------------------------------------------
     // set up the VAO used to for rendering another framebuffer to this framebuffer
@@ -1220,7 +1215,7 @@ uint32_t Graphics::AddFrameBuffer()
     return AddFrameBuffer(window_width, window_height, true, true);
 }
 
-uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool auto_pixel_scale, const bool mapped_to_window_resolution)
+uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling, const bool mapped_to_window_resolution)
 {
     frame_buffers.push_back(FrameBuffer());
     uint32_t frame_buffer_index = frame_buffers.size() - 1;
@@ -1232,7 +1227,6 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     glGenTextures(1, &frame_buffer->tex_colour_buffer);
     glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    // glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA, width, height, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE, 0);
@@ -1242,8 +1236,10 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = auto_pixel_scale ? width / Honeybear::game_width : 1.0f; // todo: janky as fuck
+    frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f; // todo: janky as fuck
+    frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
+    frame_buffer->multisampled = false;
 
     // ----------------------------------------------------------------------------
     // set up the VAO used to for rendering another framebuffer to this framebuffer
@@ -1322,24 +1318,51 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
 {
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
 
-    // delete the existing FBO texture
-    glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
+    // todo: cleanup
+    if(frame_buffer->multisampled)
+    {
+        glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+        glGenTextures(1, &frame_buffer->tex_colour_buffer);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->samples, GL_RGBA, width, height, GL_TRUE); // todo: hardcoded samples (8)
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer, 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
-    glGenTextures(1, &frame_buffer->tex_colour_buffer);
-    glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glBindTexture(GL_TEXTURE, 0);
+        glDeleteTextures(1, &frame_buffer->intermediate_tex_colour_buffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->intermediate_FBO);
+        glGenTextures(1, &frame_buffer->intermediate_tex_colour_buffer);
+        glBindTexture(GL_TEXTURE_2D, frame_buffer->intermediate_tex_colour_buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->intermediate_tex_colour_buffer, 0);
+    }
+    else
+    {
+        // delete the existing FBO texture/s
+        glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+        glGenTextures(1, &frame_buffer->tex_colour_buffer);
+        glBindTexture(GL_TEXTURE_2D, frame_buffer->tex_colour_buffer);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glBindTexture(GL_TEXTURE, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     current_fbo = 0;
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = width / Honeybear::game_width;
+    if(frame_buffer->use_game_pixel_scaling)
+    {
+        frame_buffer->game_pixel_size = width / Honeybear::game_width;
+    }
 
     // ----------------------------------------------------------------------------
     // update the VAO used to for rendering another framebuffer to this framebuffer
@@ -1380,26 +1403,7 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
 
 void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
 {
-    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
-
-    // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
-    EndBatch();
-    FlushBatch();
-    BeginBatch();
-
-    int window_width, window_height;
-    glfwGetWindowSize(window, &window_width, &window_height);
-    glViewport(0, 0, window_width, window_height);
-
-    // frame buffer textures are upside down, so use a projection that will flip them the right way
-    SetShaderProjection(activated_shader_id, 0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    current_fbo = 0;
-    BindTexture(frame_buffer->tex_colour_buffer, 0);
-    glBindVertexArray(screen_render_data.quad_VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    RenderFrameBuffer(frame_buffer_index, Vec2(0.0f));
 }
 
 void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset)
@@ -1407,9 +1411,11 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& 
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
 
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
-    EndBatch();
-    FlushBatch();
-    BeginBatch();
+    CheckAndStartNewBatch();
+
+    GLuint source_colour_buffer = frame_buffer->multisampled
+        ? frame_buffer->intermediate_tex_colour_buffer
+        : frame_buffer->tex_colour_buffer;
 
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
@@ -1420,7 +1426,7 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& 
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     current_fbo = 0;
-    BindTexture(frame_buffer->tex_colour_buffer, 0);
+    BindTexture(source_colour_buffer, 0);
     glBindVertexArray(screen_render_data.quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
@@ -1431,8 +1437,14 @@ void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer
     FrameBuffer* source_frame_buffer = &frame_buffers[source_frame_buffer_index];
     FrameBuffer* dest_frame_buffer = &frame_buffers[dest_frame_buffer_index];
 
+    CheckAndStartNewBatch();
+
+    GLuint source_colour_buffer = source_frame_buffer->multisampled
+        ? source_frame_buffer->intermediate_tex_colour_buffer
+        : source_frame_buffer->tex_colour_buffer;
+
     BindFrameBuffer(dest_frame_buffer_index);
-    BindTexture(source_frame_buffer->tex_colour_buffer, 0);
+    BindTexture(source_colour_buffer, 0);
     glBindVertexArray(dest_frame_buffer->quad_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
