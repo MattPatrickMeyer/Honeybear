@@ -107,6 +107,7 @@ namespace Honeybear
             bool mapped_to_window_resolution;
             bool multisampled;
             uint32_t samples;
+            Vec4 clear_colour;
         };
 
         struct ScreenRenderData
@@ -176,6 +177,7 @@ namespace Honeybear
 
         void Init(uint32_t window_width, uint32_t window_height, const std::string& window_title);
         void SetClearColour(const Vec4& colour);
+        void SetClearColour(const uint32_t frame_buffer_index, const Vec4& colour);
         void Clear();
         void ClearFrameBuffers();
         void SwapBuffers();
@@ -237,6 +239,11 @@ namespace Honeybear
         void BlitFrameBuffer(const uint32_t source_frame_buffer_index, const Vec2& source_pos, const Vec2& source_size, const uint32_t dest_frame_buffer_index, const Vec2& dest_pos, const Vec2& dest_size);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
         void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
+
+        void EnableBlending();
+        void DisableBlending();
+        void SetBlendFunction(GLenum source_factor, GLenum dest_factor);
+        void SetBlendFunctionSeperate(GLenum source_factor_rgb, GLenum dest_factor_rgb, GLenum source_factor_alpha, GLenum dest_factor_alpha);
 
         void InitBatchRenderer();
         void BeginBatch();

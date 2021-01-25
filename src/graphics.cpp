@@ -283,6 +283,12 @@ void Graphics::SetClearColour(const Vec4& colour)
     clear_colour = colour;
 }
 
+void Graphics::SetClearColour(const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    frame_buffer->clear_colour = colour;
+}
+
 void Graphics::Clear()
 {
     glClearColor(clear_colour.x, clear_colour.y, clear_colour.z, clear_colour.w);
@@ -291,10 +297,11 @@ void Graphics::Clear()
 
 void Graphics::ClearFrameBuffers()
 {
-    glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
     for(size_t i = 0; i < frame_buffers.size(); ++i)
     {
         FrameBuffer* frame_buffer = &frame_buffers[i];
+        Vec4 clear_colour = frame_buffer->clear_colour;
+        glClearColor(clear_colour.x, clear_colour.y, clear_colour.z, clear_colour.w);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -1134,6 +1141,7 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = true;
     frame_buffer->samples = samples;
+    frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
     // ----------------------------------------------------------------------------
     // set up the VAO used to for rendering another framebuffer to this framebuffer
@@ -1240,6 +1248,7 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = false;
+    frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
     // ----------------------------------------------------------------------------
     // set up the VAO used to for rendering another framebuffer to this framebuffer
@@ -1754,4 +1763,28 @@ void Graphics::CalcTextDimensions(const std::string& text, const std::string& fo
 
     *width = max_x - min_x;
     *height = max_y - min_y;
+}
+
+void Graphics::EnableBlending()
+{
+    glEnable(GL_BLEND);
+    CheckAndStartNewBatch();
+}
+
+void Graphics::DisableBlending()
+{
+    glDisable(GL_BLEND);
+    CheckAndStartNewBatch();
+}
+
+void Graphics::SetBlendFunction(GLenum source_factor, GLenum dest_factor)
+{
+    glBlendFunc(source_factor, dest_factor);
+    CheckAndStartNewBatch();
+}
+
+void Graphics::SetBlendFunctionSeperate(GLenum source_factor_rgb, GLenum dest_factor_rgb, GLenum source_factor_alpha, GLenum dest_factor_alpha)
+{
+    glBlendFuncSeparate(source_factor_rgb, dest_factor_rgb, source_factor_alpha, dest_factor_alpha);
+    CheckAndStartNewBatch();
 }
