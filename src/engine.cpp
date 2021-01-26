@@ -19,8 +19,6 @@ namespace
 
     float fps_records[FPS_RECORD_COUNT];
     size_t fps_record_index = 0;
-
-    uint32_t test_frame;
 }
 
 void Engine::Init(int window_width, int window_height, const std::string& window_title)
@@ -33,9 +31,6 @@ void Engine::Init(int window_width, int window_height, const std::string& window
 
 void Engine::Run()
 {
-    // todo: delete
-    test_frame = Graphics::AddFrameBuffer();
-
     float last_update_time = Ticks();
 
     while(!glfwWindowShouldClose(Graphics::window))
@@ -97,11 +92,6 @@ void Engine::Render()
     Graphics::ClearFrameBuffers();
 
     Draw();
-
-    // todo: check this is needed
-    Graphics::EndBatch();
-    Graphics::FlushBatch();
-    // --------------------------
 
     Graphics::SwapBuffers();
 }

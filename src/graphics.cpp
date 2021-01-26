@@ -1767,24 +1767,24 @@ void Graphics::CalcTextDimensions(const std::string& text, const std::string& fo
 
 void Graphics::EnableBlending()
 {
-    glEnable(GL_BLEND);
     CheckAndStartNewBatch();
+    glEnable(GL_BLEND);
 }
 
 void Graphics::DisableBlending()
 {
-    glDisable(GL_BLEND);
     CheckAndStartNewBatch();
+    glDisable(GL_BLEND);
 }
 
 void Graphics::SetBlendFunction(GLenum source_factor, GLenum dest_factor)
 {
-    glBlendFunc(source_factor, dest_factor);
     CheckAndStartNewBatch();
+    glBlendFunc(source_factor, dest_factor);
 }
 
 void Graphics::SetBlendFunctionSeperate(GLenum source_factor_rgb, GLenum dest_factor_rgb, GLenum source_factor_alpha, GLenum dest_factor_alpha)
 {
-    glBlendFuncSeparate(source_factor_rgb, dest_factor_rgb, source_factor_alpha, dest_factor_alpha);
     CheckAndStartNewBatch();
+    glBlendFuncSeparate(source_factor_rgb, dest_factor_rgb, source_factor_alpha, dest_factor_alpha);
 }
