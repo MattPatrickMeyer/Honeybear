@@ -51,9 +51,9 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
-//const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
 const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
 const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
+const char* msdf_font_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nin float FontWeight;\nout vec4 FragColor;\nuniform sampler2D image;\nfloat median(float r, float g, float b) {\nreturn max(min(r, g), min(max(r, g), b));\n}\nvoid main()\n{\nfloat px_range = 10.0;\nvec2 msdf_unit = px_range / vec2(textureSize(image, 0));\nvec3 sample = texture(image, TexCoords).rgb;\nfloat dist = median(sample.r, sample.g, sample.b) - 0.5;\ndist *= dot(msdf_unit, 0.5 / fwidth(TexCoords));\nfloat alpha = clamp(dist + 0.5, 0.0, 1.0);\nFragColor = vec4(Colour.rgb, alpha * Colour.a);\n}";
 
 void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::string& window_title)
 {
@@ -109,8 +109,9 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
     InitScreenRenderData();
     InitBatchRenderer();
 
-    // create the default shader program
-    CreateShaderProgram("default", default_vert_shader, default_frag_shader);
+    // create the default shader programs
+    CreateShaderProgram("default",   default_vert_shader, default_frag_shader);
+    CreateShaderProgram("msdf_font", default_vert_shader, msdf_font_frag_shader);
 
     InitUniformBlocks();
 
@@ -913,7 +914,7 @@ void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame
 {
     int indices_count = 2;
 
-    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count, true);
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count, LINES);
 
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
@@ -1009,8 +1010,20 @@ void Graphics::EndBatch()
 void Graphics::FlushBatch()
 {
     if(batch.index_count == 0) return;
+    std::string current_shader = activated_shader_id;
+    bool should_reset_shader = false;
+
     glBindVertexArray(batch.VAO);
-    glDrawElements(batch.draw_lines ? GL_LINES : GL_TRIANGLES, batch.index_count, GL_UNSIGNED_INT, nullptr);
+    GLenum render_type = GL_TRIANGLES;
+    if(batch.batch_type == LINES) render_type = GL_LINES;
+    else if(batch.batch_type == FONT)
+    {
+        //ActivateShader("msdf_font");
+        glUseProgram(shaders["msdf_font"]);
+        activated_shader_id = "msdf_font";
+        should_reset_shader = true;
+    }
+    glDrawElements(render_type, batch.index_count, GL_UNSIGNED_INT, nullptr);
     batch.index_count = 0;
     batch.current_index_offset = 0;
     glBindVertexArray(0);
@@ -1021,19 +1034,26 @@ void Graphics::FlushBatch()
     FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
     if(current_frame_buffer->multisampled)
     {
-        std::string current_shader = activated_shader_id;
-        ActivateShader("default");
+        if(current_shader != "default")
+        {
+            glUseProgram(shaders["default"]);
+            activated_shader_id = "default";
+            should_reset_shader = true;
+        }
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, current_frame_buffer->FBO);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_frame_buffer->intermediate_FBO);
         glBlitFramebuffer(0, 0, current_frame_buffer->width, current_frame_buffer->height, 0, 0, current_frame_buffer->width, current_frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, current_frame_buffer->FBO);
+    }
 
+    if(should_reset_shader)
+    {
         ActivateShader(current_shader);
     }
 }
 
-void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, bool draw_lines)
+void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, BatchType batch_type)
 {
     //if(frame_buffer_index != current_frame_buffer_index)
     if(frame_buffers[frame_buffer_index].FBO != current_fbo)
@@ -1056,7 +1076,7 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
         should_start_new_batch = true;
     }
 
-    if(batch.draw_lines != draw_lines)
+    if(batch.batch_type != batch_type)
     {
         should_start_new_batch = true;
     }
@@ -1071,7 +1091,7 @@ void Graphics::DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuin
         BindTexture(tex_id, 0);
     }
 
-    batch.draw_lines = draw_lines;
+    batch.batch_type = batch_type;
 }
 
 Sprite* Graphics::GetSprite(const uint32_t sprite_id)
@@ -1663,7 +1683,7 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
     {
         int indices_count = 6;
 
-        DoBatchRenderSetUp(frame_buffer_index, font->texture->ID, indices_count);
+        DoBatchRenderSetUp(frame_buffer_index, font->texture->ID, indices_count, FONT);
 
         char c = text_c_str[i];
         int ascii_code = static_cast<int>(c);

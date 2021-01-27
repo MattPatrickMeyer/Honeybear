@@ -1,4 +1,4 @@
-#include <Windows.h>
+//#include <Windows.h>
 #include <math.h>
 #include <iostream>
 #include <algorithm>
@@ -20,8 +20,8 @@ Texture* palette;
 
 Implementation::Implementation()
 {
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
+    // AllocConsole();
+    // freopen("CONOUT$", "w", stdout);
 
     // int window_width = 2560;
     // int window_height = 1440;
@@ -35,15 +35,9 @@ Implementation::Implementation()
 
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
-    Graphics::LoadShader("msdf_font",       nullptr, "res/shaders/msdf_font.frag");
 
     // SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
     // SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
-
-    // Graphics::CreateSprite(1, sprites, 0,   96,  32, 32);
-    // Graphics::CreateSprite(2, sprites, 0,   128, 32, 32);
-    // Graphics::CreateSprite(3, sprites, 448, 128, 32, 32);
-    // Graphics::CreateSprite(4, ui,      0,   160, 16, 16);
 
     Graphics::LoadSpritesFile("res/images/sprites.txt", Graphics::NEAREST);
     Graphics::LoadSpritesFile("res/images/ui.txt", Graphics::LINEAR);
@@ -95,13 +89,13 @@ void Implementation::Draw()
     Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 5.0f, &game_speed_width, &game_speed_height);
 
     //Graphics::ActivateShader("msdf_font");
-    // Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
-    // Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    // Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    // Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    // Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(Honeybear::game_width - frame_time_width, fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    // Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(Honeybear::game_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
+    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(Honeybear::game_width - frame_time_width, fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(Honeybear::game_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", 5.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     //Graphics::DeactivateShader();
 
     // Graphics::FillRectangle(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));

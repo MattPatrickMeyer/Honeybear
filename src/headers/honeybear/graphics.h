@@ -68,6 +68,13 @@ namespace Honeybear
             float font_weight; // todo: remove this (font rendering should have it's own batch system probably, or just remove font_weight altogether)
         };
 
+        enum BatchType
+        {
+            TEXTURE,
+            LINES,
+            FONT
+        };
+
         struct Batch
         {
             GLuint VAO;
@@ -84,6 +91,7 @@ namespace Honeybear
             uint32_t index_count;
 
             bool draw_lines = false;
+            BatchType batch_type = TEXTURE;
         };
 
         struct FrameBuffer
@@ -256,7 +264,7 @@ namespace Honeybear
         void BeginBatch();
         void EndBatch();
         void FlushBatch();
-        void DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, bool draw_lines = false);
+        void DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, BatchType batch_type = TEXTURE);
 
         MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);
         void RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
