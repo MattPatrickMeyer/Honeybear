@@ -1,4 +1,4 @@
-//#include <Windows.h>
+#include <Windows.h>
 #include <math.h>
 #include <iostream>
 #include <algorithm>
@@ -20,8 +20,8 @@ Texture* palette;
 
 Implementation::Implementation()
 {
-    // AllocConsole();
-    // freopen("CONOUT$", "w", stdout);
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
 
     // int window_width = 2560;
     // int window_height = 1440;

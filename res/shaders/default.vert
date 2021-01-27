@@ -4,11 +4,14 @@ layout (location = 1) in vec2 tex_coords;
 layout (location = 2) in vec4 colour;
 layout (location = 3) in float font_weight;
 
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+};
+
 out vec2 TexCoords;
 out vec4 Colour;
 out float FontWeight;
-
-uniform mat4 projection;
 
 void main()
 {

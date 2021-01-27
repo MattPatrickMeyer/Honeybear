@@ -65,7 +65,7 @@ namespace Honeybear
             Vec2 position;
             Vec2 tex_coords;
             Vec4 colour;
-            float font_weight;
+            float font_weight; // todo: remove this (font rendering should have it's own batch system probably, or just remove font_weight altogether)
         };
 
         struct Batch
@@ -108,6 +108,11 @@ namespace Honeybear
             bool multisampled;
             uint32_t samples;
             Vec4 clear_colour;
+        };
+
+        struct UniformBlocks
+        {
+            GLuint matrices;
         };
 
         struct ScreenRenderData
@@ -167,6 +172,7 @@ namespace Honeybear
         extern std::unordered_map<std::string, MSDF_Font> msdf_fonts;
         extern std::vector<FrameBuffer> frame_buffers;
         extern uint32_t current_frame_buffer_index;
+        extern UniformBlocks uniform_blocks;
 
         extern std::string activated_shader_id;
 
@@ -184,6 +190,7 @@ namespace Honeybear
 
         void InitScreenRenderData();
         void UpdateScreenRenderData();
+        void InitUniformBlocks();
 
         void ChangeResolution(const uint32_t width, const uint32_t height);
         void GetResolution(int* width, int* height);

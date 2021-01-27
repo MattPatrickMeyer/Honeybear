@@ -26,6 +26,7 @@ std::string Graphics::activated_shader_id;
 GLFWwindow* Graphics::window;
 Graphics::Batch Graphics::batch;
 Graphics::ScreenRenderData Graphics::screen_render_data;
+Graphics::UniformBlocks Graphics::uniform_blocks;
 
 GLuint current_fbo = 0;
 Vec4 clear_colour(0.0f, 0.0f, 0.0f, 1.0f);
@@ -50,7 +51,8 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
-const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
+//const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nuniform mat4 projection;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
+const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
 const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
 
 void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::string& window_title)
@@ -109,6 +111,8 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     // create the default shader program
     CreateShaderProgram("default", default_vert_shader, default_frag_shader);
+
+    InitUniformBlocks();
 
     // activate the default shader
     ActivateShader("default");
@@ -406,6 +410,19 @@ void Graphics::CreateShaderProgram(const std::string& shader_id, const char* ver
     glDeleteShader(fragment_shader_id);
 
     shaders[shader_id] = program_id;
+
+    // bind Matrices uniform block to this shader
+    GLuint uniform_block_index = glGetUniformBlockIndex(program_id, "Matrices");
+    glUniformBlockBinding(program_id, uniform_block_index, 0);
+}
+
+void Graphics::InitUniformBlocks()
+{
+    glGenBuffers(1, &uniform_blocks.matrices);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_blocks.matrices);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float) * 16, NULL, GL_STATIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, uniform_blocks.matrices, 0, sizeof(float) * 16);
 }
 
 void Graphics::ActivateShader(const std::string& shader_id)
@@ -417,12 +434,12 @@ void Graphics::ActivateShader(const std::string& shader_id)
 
     CheckAndStartNewBatch();
 
-    FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
+    // FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
     glUseProgram(shaders[shader_id]);
-    if(frame_buffer)
-    {
-        SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
-    }
+    // if(frame_buffer)
+    // {
+    //     SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
+    // }
     activated_shader_id = shader_id;
 }
 
@@ -444,7 +461,7 @@ void Graphics::CheckAndStartNewBatch()
 
 void Graphics::SetShaderProjection(const std::string& shader_id, const float left, const float right, const float bottom, const float top, const float z_near, const float z_far)
 {
-    CheckAndStartNewBatch();
+    //CheckAndStartNewBatch();
 
     GLfloat matrix[] = {
         1.0f, 0.0f, 0.0f, 0.0f,
@@ -460,8 +477,11 @@ void Graphics::SetShaderProjection(const std::string& shader_id, const float lef
     matrix[13] = - (top + bottom) / (top - bottom);
     matrix[14] = - (z_far + z_near) / (z_far - z_near);
 
-    uint32_t program_ID = shaders[shader_id];
-    glUniformMatrix4fv(glGetUniformLocation(program_ID, "projection"), 1, GL_FALSE, matrix);
+    // uint32_t program_ID = shaders[shader_id];
+    // glUniformMatrix4fv(glGetUniformLocation(program_ID, "projection"), 1, GL_FALSE, matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_blocks.matrices);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(float) * 16, matrix);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void Graphics::SetShaderFloat(const std::string& shader_id, const std::string& uniform_name, const float value)
