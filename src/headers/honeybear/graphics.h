@@ -62,7 +62,7 @@ namespace Honeybear
 
         struct Vertex
         {
-            Vec2 position;
+            Vec3 position;
             Vec2 tex_coords;
             Vec4 colour;
             float font_weight; // todo: remove this (font rendering should have it's own batch system probably, or just remove font_weight altogether)
@@ -227,10 +227,14 @@ namespace Honeybear
         void LoadSpritesFile(const std::string& file_name, const FilterType filter_type);
         SpriteSheet* LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type);
         void CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h);
-        void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
         Sprite* GetSprite(const uint32_t sprite_id);
 
         void DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame_buffer_index, const Vec4& colour);

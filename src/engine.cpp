@@ -10,6 +10,7 @@ using namespace Honeybear;
 float Honeybear::game_width;
 float Honeybear::game_height;
 float Honeybear::game_speed = 1.0f;
+double Honeybear::total_elapsed_time = 0.0f;
 int Honeybear::Engine::average_fps;
 float Honeybear::Engine::last_frame_time;
 
@@ -39,6 +40,7 @@ void Engine::Run()
 
         const float current_time = Ticks();
         const float frame_time = current_time - last_update_time;
+        total_elapsed_time += frame_time * game_speed;
         last_frame_time = frame_time;
 
         last_update_time = current_time;
@@ -80,7 +82,7 @@ void Engine::Run()
     glfwTerminate();
 }
 
-float Engine::Ticks()
+double Engine::Ticks()
 {
     // returns the time in seconds (since glfw was initialized)
     return glfwGetTime();

@@ -290,6 +290,9 @@ bool Honeybear::PolarCompare::operator() (const Vec2& a, const Vec2& b)
     float angle_a = VectorToDegrees(pa.Direction());
     float angle_b = VectorToDegrees(pb.Direction());
 
+    if(angle_a < 0.0f) angle_a += 360.0f;
+    if(angle_b < 0.0f) angle_b += 360.0f;
+
     return angle_a < angle_b;
 }
 

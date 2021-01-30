@@ -51,7 +51,7 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
-const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec2 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex, 0.0, 1.0);\n}";
+const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec3 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n}";
 const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
 const char* msdf_font_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nin float FontWeight;\nout vec4 FragColor;\nuniform sampler2D image;\nfloat median(float r, float g, float b) {\nreturn max(min(r, g), min(max(r, g), b));\n}\nvoid main()\n{\nfloat px_range = 10.0;\nvec2 msdf_unit = px_range / vec2(textureSize(image, 0));\nvec3 sample = texture(image, TexCoords).rgb;\nfloat dist = median(sample.r, sample.g, sample.b) - 0.5;\ndist *= dot(msdf_unit, 0.5 / fwidth(TexCoords));\nfloat alpha = clamp(dist + 0.5, 0.0, 1.0);\nFragColor = vec4(Colour.rgb, alpha * Colour.a);\n}";
 
@@ -246,7 +246,7 @@ void Graphics::InitBatchRenderer()
 
     // position
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, position));
 
     // tex coords
     glEnableVertexAttribArray(1);
@@ -256,7 +256,7 @@ void Graphics::InitBatchRenderer()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
 
-    // font weight
+    // font weight (todo: remove this eventually)
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, font_weight));
 
@@ -435,12 +435,7 @@ void Graphics::ActivateShader(const std::string& shader_id)
 
     CheckAndStartNewBatch();
 
-    // FrameBuffer* frame_buffer = &frame_buffers[current_frame_buffer_index];
     glUseProgram(shaders[shader_id]);
-    // if(frame_buffer)
-    // {
-    //     SetShaderProjection(shader_id, 0.0f, frame_buffer->width, 0.0f, frame_buffer->height, -1.0f, 1.0f);
-    // }
     activated_shader_id = shader_id;
 }
 
@@ -587,17 +582,25 @@ void Graphics::LoadSpritesFile(const std::string& file_name, const FilterType fi
 
 SpriteSheet* Graphics::LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type)
 {
-    if(sprite_sheets.count(sprite_sheet_name) == 0)
+    SpriteSheet* sprite_sheet;
+
+    if(sprite_sheets.count(sprite_sheet_name) > 0)
     {
-        SpriteSheet* sprite_sheet = new SpriteSheet();
-        if(diffuse)
-            sprite_sheet->diffuse = LoadTexture(diffuse, filter_type);
-        if(specular)
-            sprite_sheet->specular = LoadTexture(specular, filter_type);
-        if(normal)
-            sprite_sheet->normal = LoadTexture(normal, filter_type);
+        sprite_sheet = sprite_sheets[sprite_sheet_name];
+    }
+    else
+    {
+        sprite_sheet = new SpriteSheet();
         sprite_sheets[sprite_sheet_name] = sprite_sheet;
     }
+
+    if(diffuse)
+        sprite_sheet->diffuse = LoadTexture(diffuse, filter_type);
+    if(specular)
+        sprite_sheet->specular = LoadTexture(specular, filter_type);
+    if(normal)
+        sprite_sheet->normal = LoadTexture(normal, filter_type);
+
     return sprite_sheets[sprite_sheet_name];
 }
 
@@ -610,6 +613,12 @@ Texture* Graphics::LoadTexture(const std::string& texture_file_name, const Filte
 
     GLuint filter = GL_LINEAR;
     if(filter_type == NEAREST) filter = GL_NEAREST;
+
+    // if there is already a value for this id, then delete it
+    if(textures.count(texture_file_name) > 0)
+    {
+        glDeleteTextures(1, &textures[texture_file_name].ID);
+    }
 
     Texture* texture = &textures[texture_file_name];
 
@@ -642,22 +651,42 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
     bound_textures[texture_unit] = texture_id;
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), Vec2(sprite.width, sprite.height), frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+{
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), Vec2(sprite.width, sprite.height), frame_buffer_index, sprite_sheet_layer, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+{
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, frame_buffer_index, sprite_sheet_layer, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     DrawSprite(sprite, position, size, frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
     DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;
@@ -688,6 +717,7 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 
     // bottom right
     batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
     batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
+    batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
@@ -696,6 +726,7 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 
     // top right
     batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
     batch.buffer_ptr->position.y = (position.y) * pixel_size;
+    batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
     batch.buffer_ptr->colour = colour;
@@ -704,6 +735,7 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 
     // top left
     batch.buffer_ptr->position.x = (position.x) * pixel_size;
     batch.buffer_ptr->position.y = (position.y) * pixel_size;
+    batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
     batch.buffer_ptr->colour = colour;
@@ -712,6 +744,7 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec2 position, const Vec2 
     // bottom left
     batch.buffer_ptr->position.x = (position.x) * pixel_size;
     batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
+    batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
     batch.buffer_ptr->colour = colour;
@@ -1026,7 +1059,7 @@ void Graphics::FlushBatch()
     glDrawElements(render_type, batch.index_count, GL_UNSIGNED_INT, nullptr);
     batch.index_count = 0;
     batch.current_index_offset = 0;
-    glBindVertexArray(0);
+    glBindVertexArray(0); // todo: @performance maybe not needed?
 
     // todo: probably not the best (fastest) place to put this
     // - the frame buffer only needs to be blitted if it's actually being used/rendered

@@ -10,6 +10,7 @@ namespace Honeybear
     extern float game_width;
     extern float game_height;
     extern float game_speed;
+    extern double total_elapsed_time;
 
     struct Engine
     {
@@ -21,10 +22,11 @@ namespace Honeybear
         void Render();
         void ProcessInput();
 
-        float Ticks();
+        double Ticks();
 
         virtual void Draw() = 0;
         virtual void Update(const float dt) = 0;
+        //virtual void UpdateFixed() = 0;
         virtual void HandleInput() = 0;
 
         protected:

@@ -93,6 +93,7 @@ namespace Honeybear
     Projection ProjectToAxis(const Polygon& polygon, Vec2 axis);
     Projection ProjectToAxis(const Line& line, Vec2 axis);
 
+    // todo: remove this maybe
     struct PolarCompare
     {
         Vec2 pivot;

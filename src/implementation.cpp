@@ -105,14 +105,16 @@ void Implementation::Draw()
     Graphics::FillTriangle(Vec2(0.0f + x_test, 0.0f), Vec2(150.0f + x_test, 200.0f), Vec2(0.0f + x_test, 200.0f), multi_sample_frame_buffer, Vec4(1.0f));
     Graphics::FillCircle(mouse_pos, 50.0f, multi_sample_frame_buffer, Vec4(1.0f));
 
+    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(100.0f, 100.0f), another_test_frame_buffer);
+
     // Graphics::ActivateShader("test");
     // Graphics::FillTriangle(Vec2(100.0f / 3 + x_test, 0.0f), Vec2(250.0f / 3 + x_test, 200.0f / 3), Vec2(100.0f / 3 + x_test, 200.0f / 3), ui_frame_buffer, Vec4(1.0f));
     // Graphics::DeactivateShader();
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);
-    Graphics::RenderFrameBuffer(ui_frame_buffer);
-    Graphics::RenderFrameBuffer(multi_sample_frame_buffer);
+    // Graphics::RenderFrameBuffer(ui_frame_buffer);
+    // Graphics::RenderFrameBuffer(multi_sample_frame_buffer);
     //Graphics::RenderFrameBuffer(little_frame_buffer);
 }
 
@@ -158,5 +160,9 @@ void Implementation::HandleInput()
     if(Input::WasKeyPressed(Input::KEY_EQUAL))
     {
         Honeybear::game_speed = std::min(2.0f, game_speed + 0.1f);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F8))
+    {
+        Graphics::LoadSpritesFile("res/images/sprites.txt", Graphics::NEAREST);
     }
 }
