@@ -3,6 +3,6 @@
 int main()
 {
     Implementation game;
-    game.Run();
+    game.RunTest();
     return 0;
 }

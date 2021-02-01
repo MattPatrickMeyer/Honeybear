@@ -10,6 +10,7 @@ namespace Honeybear
     extern float game_width;
     extern float game_height;
     extern float game_speed;
+    extern double fixed_time_step;
     extern double total_elapsed_time;
 
     struct Engine
@@ -19,6 +20,7 @@ namespace Honeybear
 
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
+        void RunTest(); // todo: change this
         void Render();
         void ProcessInput();
 
@@ -26,11 +28,14 @@ namespace Honeybear
 
         virtual void Draw() = 0;
         virtual void Update(const float dt) = 0;
-        //virtual void UpdateFixed() = 0;
+        virtual void BeginFrame() = 0;
+        virtual void UpdateFixed(const double dt) = 0;
+        virtual void InterpolateState(const double t) = 0;
         virtual void HandleInput() = 0;
 
         protected:
             void SetGameSize(const float w, const float h);
+            void SetFixedTimeStep(const float value);
     };
 };
 
