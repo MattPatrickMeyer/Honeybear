@@ -176,7 +176,7 @@ void Implementation::HandleInput()
 
 void Implementation::InterpolateState(const double t)
 {
-    inter_test = prev_test + (test - prev_test) * t;
+    Interp(inter_test, prev_test, test, t);
 }
 
 void Implementation::BeginFrame()

@@ -280,3 +280,29 @@ float Honeybear::EaseInOutBack(float t, float b, float c, float d)
 	float postFix = t -= 2;
 	return c / 2 * ((postFix) * t * (((s *= (1.525f)) + 1) * t + s) + 2) + b;
 }
+
+void Honeybear::Interp(float& value, const float a, const float b, const double t)
+{
+    value = a + (b - a) * t;
+}
+
+void Honeybear::Interp(Vec2& value, const Vec2& a, const Vec2& b, const double t)
+{
+    Interp(value.x, a.x, b.x, t);
+    Interp(value.y, a.y, b.y, t);
+}
+
+void Honeybear::Interp(Vec3& value, const Vec3& a, const Vec3& b, const double t)
+{
+    Interp(value.x, a.x, b.x, t);
+    Interp(value.y, a.y, b.y, t);
+    Interp(value.z, a.z, b.z, t);
+}
+
+void Honeybear::Interp(Vec4& value, const Vec4& a, const Vec4& b, const double t)
+{
+    Interp(value.x, a.x, b.x, t);
+    Interp(value.y, a.y, b.y, t);
+    Interp(value.z, a.z, b.z, t);
+    Interp(value.w, a.w, b.w, t);
+}

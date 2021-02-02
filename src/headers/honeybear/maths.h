@@ -75,6 +75,15 @@ namespace Honeybear
     void RadiansToVector(const float radians, Vec2& v);
     void DegreesToVector(const float degrees, Vec2& v);
 
+    // -------------------
+    // ** INTERPOLATION **
+    // -------------------
+
+    void Interp(float& value, const float a, const float b, const double t);
+    void Interp(Vec2& value, const Vec2& a, const Vec2& b, const double t);
+    void Interp(Vec3& value, const Vec3& a, const Vec3& b, const double t);
+    void Interp(Vec4& value, const Vec4& a, const Vec4& b, const double t);
+
     // ------------
     // ** EASING **
     // ------------

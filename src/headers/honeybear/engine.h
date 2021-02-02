@@ -20,7 +20,7 @@ namespace Honeybear
 
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
-        void RunTest(); // todo: change this
+        void RunFixed();
         void Render();
         void ProcessInput();
 

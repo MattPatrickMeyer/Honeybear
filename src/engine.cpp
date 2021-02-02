@@ -34,7 +34,7 @@ void Engine::Init(int window_width, int window_height, const std::string& window
     Input::Init();
 }
 
-void Engine::RunTest()
+void Engine::RunFixed()
 {
     double elapsed_time = 0.0f;
     double current_time = Ticks();
