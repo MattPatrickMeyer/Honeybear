@@ -104,6 +104,8 @@ namespace Honeybear
             GLuint intermediate_FBO;
             GLuint intermediate_tex_colour_buffer;
 
+            GLuint RBO;
+
             GLuint quad_VAO;
             GLuint quad_VBO;
             GLuint quad_IB;
@@ -114,6 +116,7 @@ namespace Honeybear
             bool use_game_pixel_scaling;
             bool mapped_to_window_resolution;
             bool multisampled;
+            bool depth_testing_enabled;
             uint32_t samples;
             Vec4 clear_colour;
         };

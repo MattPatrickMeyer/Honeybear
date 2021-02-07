@@ -308,7 +308,14 @@ void Graphics::ClearFrameBuffers()
         Vec4 clear_colour = frame_buffer->clear_colour;
         glClearColor(clear_colour.x, clear_colour.y, clear_colour.z, clear_colour.w);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if(frame_buffer->depth_testing_enabled)
+        {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        else
+        {
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     current_fbo = 0;
@@ -1311,8 +1318,17 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE, 0);
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
+
+    if(true)
+    {
+        glGenRenderbuffers(1, &frame_buffer->RBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer->RBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, frame_buffer->RBO);
+    }
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     frame_buffer->width = width;
@@ -1321,6 +1337,7 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = false;
+    frame_buffer->depth_testing_enabled = true;
     frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
     // ----------------------------------------------------------------------------
@@ -1434,6 +1451,16 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glBindTexture(GL_TEXTURE, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
+
+        if(frame_buffer->depth_testing_enabled)
+        {
+            glDeleteRenderbuffers(1, &frame_buffer->RBO);
+            glGenRenderbuffers(1, &frame_buffer->RBO);
+            glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer->RBO);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, frame_buffer->RBO);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
