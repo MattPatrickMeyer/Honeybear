@@ -267,6 +267,9 @@ namespace Honeybear
         void SetBlendFunction(GLenum source_factor, GLenum dest_factor);
         void SetBlendFunctionSeperate(GLenum source_factor_rgb, GLenum dest_factor_rgb, GLenum source_factor_alpha, GLenum dest_factor_alpha);
 
+        void EnableDepthTesting();
+        void DisableDepthTesting();
+
         void InitBatchRenderer();
         void BeginBatch();
         void EndBatch();

@@ -1888,3 +1888,15 @@ void Graphics::SetBlendFunctionSeperate(GLenum source_factor_rgb, GLenum dest_fa
     CheckAndStartNewBatch();
     glBlendFuncSeparate(source_factor_rgb, dest_factor_rgb, source_factor_alpha, dest_factor_alpha);
 }
+
+void Graphics::EnableDepthTesting()
+{
+    CheckAndStartNewBatch();
+    glEnable(GL_DEPTH_TEST);
+}
+
+void Graphics::DisableDepthTesting()
+{
+    CheckAndStartNewBatch();
+    glDisable(GL_DEPTH_TEST);
+}
