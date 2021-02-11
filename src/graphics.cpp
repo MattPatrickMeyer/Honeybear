@@ -533,6 +533,7 @@ void Graphics::SetShaderTexture(const std::string& shader_id, const std::string&
 void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit)
 {
     CheckAndStartNewBatch();
+    ResolveMultiSampledFrameBuffer(frame_buffer_index);
     GLuint texture_id = frame_buffers[frame_buffer_index].tex_colour_buffer;
     SetShaderTexture(shader_id, uniform_name, texture_id, texture_unit);
 }
@@ -1058,7 +1059,7 @@ void Graphics::FlushBatch()
     if(batch.batch_type == LINES) render_type = GL_LINES;
     else if(batch.batch_type == FONT)
     {
-        //ActivateShader("msdf_font");
+        // todo: think about another solution for this (maybe font rendering should have it's own batch system)
         glUseProgram(shaders["msdf_font"]);
         activated_shader_id = "msdf_font";
         should_reset_shader = true;
@@ -1068,12 +1069,21 @@ void Graphics::FlushBatch()
     batch.current_index_offset = 0;
     glBindVertexArray(0); // todo: @performance maybe not needed?
 
-    // todo: probably not the best (fastest) place to put this
-    // - the frame buffer only needs to be blitted if it's actually being used/rendered
-    // - should probably put it in renderframebuffer or similar
-    FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
-    if(current_frame_buffer->multisampled)
+    if(should_reset_shader)
     {
+        ActivateShader(current_shader);
+    }
+}
+
+void Graphics::ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    if(frame_buffer->multisampled)
+    {
+        std::string current_shader = activated_shader_id;
+        bool should_reset_shader = false;
+
         if(current_shader != "default")
         {
             glUseProgram(shaders["default"]);
@@ -1081,15 +1091,15 @@ void Graphics::FlushBatch()
             should_reset_shader = true;
         }
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, current_frame_buffer->FBO);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_frame_buffer->intermediate_FBO);
-        glBlitFramebuffer(0, 0, current_frame_buffer->width, current_frame_buffer->height, 0, 0, current_frame_buffer->width, current_frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_buffer->FBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer->intermediate_FBO);
+        glBlitFramebuffer(0, 0, frame_buffer->width, frame_buffer->height, 0, 0, frame_buffer->width, frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, current_frame_buffer->FBO);
-    }
 
-    if(should_reset_shader)
-    {
-        ActivateShader(current_shader);
+        if(should_reset_shader)
+        {
+            ActivateShader(current_shader);
+        }
     }
 }
 
@@ -1296,6 +1306,22 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
     return frame_buffer_index;
 }
 
+void Graphics::AttachDepthBuffer(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    frame_buffer->depth_testing_enabled = true;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
+
+    glGenRenderbuffers(1, &frame_buffer->RBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer->RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, frame_buffer->width, frame_buffer->height);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, frame_buffer->RBO);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 uint32_t Graphics::AddFrameBuffer()
 {
     int window_width, window_height;
@@ -1320,15 +1346,6 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     glBindTexture(GL_TEXTURE, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frame_buffer->tex_colour_buffer, 0);
 
-    if(true)
-    {
-        glGenRenderbuffers(1, &frame_buffer->RBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, frame_buffer->RBO);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, frame_buffer->RBO);
-    }
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     frame_buffer->width = width;
@@ -1337,7 +1354,7 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = false;
-    frame_buffer->depth_testing_enabled = true;
+    frame_buffer->depth_testing_enabled = false;
     frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
     // ----------------------------------------------------------------------------
@@ -1522,6 +1539,9 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& 
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
     CheckAndStartNewBatch();
 
+    // will do nothing if the frame buffer is not multisampled
+    ResolveMultiSampledFrameBuffer(frame_buffer_index);
+
     GLuint source_colour_buffer = frame_buffer->multisampled
         ? frame_buffer->intermediate_tex_colour_buffer
         : frame_buffer->tex_colour_buffer;
@@ -1548,6 +1568,8 @@ void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer
 
     CheckAndStartNewBatch();
 
+    ResolveMultiSampledFrameBuffer(source_frame_buffer_index);
+
     GLuint source_colour_buffer = source_frame_buffer->multisampled
         ? source_frame_buffer->intermediate_tex_colour_buffer
         : source_frame_buffer->tex_colour_buffer;
@@ -1565,6 +1587,8 @@ void Graphics::RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index,
 
     FrameBuffer* src = &frame_buffers[source_frame_buffer_index];
     GLuint tex_buffer = src->multisampled ? src->intermediate_tex_colour_buffer : src->tex_colour_buffer;
+
+    ResolveMultiSampledFrameBuffer(source_frame_buffer_index);
 
     DoBatchRenderSetUp(dest_frame_buffer_index, tex_buffer, indices_count);
 

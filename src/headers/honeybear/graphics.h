@@ -254,11 +254,12 @@ namespace Honeybear
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
+        void AttachDepthBuffer(const uint32_t frame_buffer_index);
+        void ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset);
         void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);
         void RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index, const float x, const float y, const float w, const float h, const uint32_t dest_frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void BlitFrameBuffer(const uint32_t source_frame_buffer_index, const Vec2& source_pos, const Vec2& source_size, const uint32_t dest_frame_buffer_index, const Vec2& dest_pos, const Vec2& dest_size);
         void BindFrameBuffer(const uint32_t frame_buffer_index);
         void UpdateFrameBufferSize(const uint32_t frame_buffer_index, const uint32_t width, const uint32_t height);
 
