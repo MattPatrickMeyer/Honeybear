@@ -220,6 +220,11 @@ namespace Honeybear
         void SetShaderVec2(const std::string& shader_id, const std::string& uniform_name, const Vec2& value);
         void SetShaderVec3(const std::string& shader_id, const std::string& uniform_name, const Vec3& value);
         void SetShaderVec4(const std::string& shader_id, const std::string& uniform_name, const Vec4& value);
+        void SetShaderFloatArray(const std::string& shader_id, const std::string& uniform_name, const float* values, const size_t n);
+        void SetShaderIntArray(const std::string& shader_id, const std::string& uniform_name, const int* values, const size_t n);
+        void SetShaderVec2Array(const std::string& shader_id, const std::string& uniform_name, const Vec2* values, const size_t n);
+        void SetShaderVec3Array(const std::string& shader_id, const std::string& uniform_name, const Vec3* values, const size_t n);
+        void SetShaderVec4Array(const std::string& shader_id, const std::string& uniform_name, const Vec4* values, const size_t n);
         void SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit);
         void SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit);
         void CheckAndStartNewBatch();
@@ -247,6 +252,7 @@ namespace Honeybear
 
         void FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillRectangle(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 

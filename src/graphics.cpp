@@ -522,6 +522,40 @@ void Graphics::SetShaderVec4(const std::string& shader_id, const std::string& un
     glUniform4f(glGetUniformLocation(program_ID, uniform_name.c_str()), value.x, value.y, value.z, value.w);
 }
 
+void Graphics::SetShaderFloatArray(const std::string& shader_id, const std::string& uniform_name, const float* values, const size_t n)
+{
+    CheckAndStartNewBatch();
+    uint32_t program_ID = shaders[shader_id];
+    glUniform1fv(glGetUniformLocation(program_ID, uniform_name.c_str()), n, values);
+}
+void Graphics::SetShaderIntArray(const std::string& shader_id, const std::string& uniform_name, const int* values, const size_t n)
+{
+    CheckAndStartNewBatch();
+    uint32_t program_ID = shaders[shader_id];
+    glUniform1iv(glGetUniformLocation(program_ID, uniform_name.c_str()), n, values);
+}
+
+void Graphics::SetShaderVec2Array(const std::string& shader_id, const std::string& uniform_name, const Vec2* values, const size_t n)
+{
+    CheckAndStartNewBatch();
+    uint32_t program_ID = shaders[shader_id];
+    glUniform2fv(glGetUniformLocation(program_ID, uniform_name.c_str()), n, &(values->x));
+}
+
+void Graphics::SetShaderVec3Array(const std::string& shader_id, const std::string& uniform_name, const Vec3* values, const size_t n)
+{
+    CheckAndStartNewBatch();
+    uint32_t program_ID = shaders[shader_id];
+    glUniform3fv(glGetUniformLocation(program_ID, uniform_name.c_str()), n, &(values->x));
+}
+
+void Graphics::SetShaderVec4Array(const std::string& shader_id, const std::string& uniform_name, const Vec4* values, const size_t n)
+{
+    CheckAndStartNewBatch();
+    uint32_t program_ID = shaders[shader_id];
+    glUniform4fv(glGetUniformLocation(program_ID, uniform_name.c_str()), n, &(values->x));
+}
+
 void Graphics::SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit)
 {
     CheckAndStartNewBatch();
@@ -811,6 +845,11 @@ void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& po
 
 void Graphics::FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
+    FillRectangle(x, y, 0.0f, w, h, frame_buffer_index, colour);
+}
+
+void Graphics::FillRectangle(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
+{
     int indices_count = 6;
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
@@ -820,6 +859,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     // bottom right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
     batch.buffer_ptr->position.y = (y + h) * pixel_size;
+    batch.buffer_ptr->position.z = z * pixel_size;
     batch.buffer_ptr->tex_coords.x = 1.0f;
     batch.buffer_ptr->tex_coords.y = 1.0f;
     batch.buffer_ptr->colour = colour;
@@ -828,6 +868,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     // top right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
     batch.buffer_ptr->position.y = y * pixel_size;
+    batch.buffer_ptr->position.z = z * pixel_size;
     batch.buffer_ptr->tex_coords.x = 1.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
@@ -836,6 +877,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     // top left
     batch.buffer_ptr->position.x = x * pixel_size;
     batch.buffer_ptr->position.y = y * pixel_size;
+    batch.buffer_ptr->position.z = z * pixel_size;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 0.0f;
     batch.buffer_ptr->colour = colour;
@@ -844,6 +886,7 @@ void Graphics::FillRectangle(const float x, const float y, const float w, const 
     // bottom left
     batch.buffer_ptr->position.x = x * pixel_size;
     batch.buffer_ptr->position.y = (y + h) * pixel_size;
+    batch.buffer_ptr->position.z = z * pixel_size;
     batch.buffer_ptr->tex_coords.x = 0.0f;
     batch.buffer_ptr->tex_coords.y = 1.0f;
     batch.buffer_ptr->colour = colour;
