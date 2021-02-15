@@ -24,6 +24,7 @@ namespace Honeybear
         Vec2 Normalised();
         Vec2 Perp();
         Vec2 Negated();
+        Vec2 Add(const Vec2& other) const;
         Vec2 Subtract(const Vec2& other) const;
         Vec2 Rotated(const Vec2& anchor_point, float angle_deg);
         Vec2 MovedInDirection(const Vec2& dir, float distance);

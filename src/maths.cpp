@@ -91,6 +91,11 @@ Vec2 Vec2::Negated()
     return Vec2(-x, -y);
 }
 
+Vec2 Vec2::Add(const Vec2& other) const
+{
+    return Vec2(x + other.x, y + other.y);
+}
+
 Vec2 Vec2::Subtract(const Vec2& other) const
 {
     return Vec2(x - other.x, y - other.y);
