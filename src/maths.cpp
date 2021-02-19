@@ -137,6 +137,23 @@ Vec2 Vec2::Rotated(const Vec2& anchor_point, float angle_deg)
     return Vec2(x_rotated, y_rotated);
 }
 
+void Honeybear::Rotate(Vec2& value, const Vec2& origin, const float angle_deg)
+{
+    float angle_rad = angle_deg * (PI / 180.0f);
+    float cos_angle = std::cos(angle_rad);
+    float sin_angle = std::sin(angle_rad);
+    Rotate(value, origin, cos_angle, sin_angle);
+}
+
+void Honeybear::Rotate(Vec2& value, const Vec2& origin, const float cos_angle, const float sin_angle)
+{
+    float dx = value.x - origin.x;
+    float dy = value.y - origin.y;
+
+    value.x = origin.x + (dx * cos_angle - dy * sin_angle);
+    value.y = origin.y + (dx * sin_angle + dy * cos_angle);
+}
+
 Vec2 Vec2::MovedInDirection(const Vec2& dir, float distance)
 {
     return Vec2(

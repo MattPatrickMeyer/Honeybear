@@ -79,6 +79,7 @@ void Implementation::UpdateFixed(const double dt)
 {
     prev_test = test;
     test += dt;
+    angle += dt;
 }
 
 float inter_test = 0.0f;
@@ -98,7 +99,7 @@ void Implementation::Draw()
     Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 10.0f, &game_speed_width, &game_speed_height);
 
     Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
-    // Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 10.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -112,20 +113,20 @@ void Implementation::Draw()
     Graphics::FillTriangle(Vec2(0.0f + x_test, 0.0f), Vec2(150.0f + x_test, 200.0f), Vec2(0.0f + x_test, 200.0f), multi_sample_frame_buffer, Vec4(1.0f));
     Graphics::FillCircle(mouse_pos, 50.0f, multi_sample_frame_buffer, Vec4(1.0f));
 
-    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(100.0f, 100.0f), another_test_frame_buffer);
+    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
 
 
-    Graphics::ActivateShader("second_tex_test");
-    Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", ui_frame_buffer, 1);
-    Graphics::FillRectangle(0.0f, 0.0f, 100.0f, 100.0f, another_test_frame_buffer, Vec4(1.0f));
-    Graphics::DeactivateShader();
+    // Graphics::ActivateShader("second_tex_test");
+    // Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", ui_frame_buffer, 1);
+    // Graphics::FillRectangle(0.0f, 0.0f, 100.0f, 100.0f, another_test_frame_buffer, Vec4(1.0f));
+    // Graphics::DeactivateShader();
 
     // Graphics::ActivateShader("test");
     // Graphics::FillTriangle(Vec2(100.0f / 3 + x_test, 0.0f), Vec2(250.0f / 3 + x_test, 200.0f / 3), Vec2(100.0f / 3 + x_test, 200.0f / 3), ui_frame_buffer, Vec4(1.0f));
     // Graphics::DeactivateShader();
 
     // Graphics::RenderFrameBuffer(test_frame_buffer);
-    //Graphics::RenderFrameBuffer(another_test_frame_buffer);
+    Graphics::RenderFrameBuffer(another_test_frame_buffer);
     Graphics::RenderFrameBuffer(ui_frame_buffer);
     // Graphics::RenderFrameBuffer(multi_sample_frame_buffer);
     //Graphics::RenderFrameBuffer(little_frame_buffer);

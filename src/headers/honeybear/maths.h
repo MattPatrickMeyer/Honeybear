@@ -107,6 +107,12 @@ namespace Honeybear
     float EaseInBack(float t, float b, float c, float d);
     float EaseOutBack(float t, float b, float c, float d);
     float EaseInOutBack(float t, float b, float c, float d);
+
+    // -------------------
+    // ** VEC2 FUNCTIONS **
+    // -------------------
+    void Rotate(Vec2& value, const Vec2& origin, const float angle_deg);
+    void Rotate(Vec2& value, const Vec2& origin, const float cos_angle, const float sin_angle);
 };
 
 #endif

@@ -51,9 +51,9 @@ const int max_quad_count = 10000;
 const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
-const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec3 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (location = 3) in float font_weight;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nout vec2 TexCoords;\nout vec4 Colour;\nout float FontWeight;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nFontWeight = font_weight;\ngl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n}";
+const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec3 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nout vec2 TexCoords;\nout vec4 Colour;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\ngl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n}";
 const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * Colour;\n}";
-const char* msdf_font_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nin float FontWeight;\nout vec4 FragColor;\nuniform sampler2D image;\nfloat median(float r, float g, float b) {\nreturn max(min(r, g), min(max(r, g), b));\n}\nvoid main()\n{\nfloat px_range = 10.0;\nvec2 msdf_unit = px_range / vec2(textureSize(image, 0));\nvec3 sample = texture(image, TexCoords).rgb;\nfloat dist = median(sample.r, sample.g, sample.b) - 0.5;\ndist *= dot(msdf_unit, 0.5 / fwidth(TexCoords));\nfloat alpha = clamp(dist + 0.5, 0.0, 1.0);\nFragColor = vec4(Colour.rgb, alpha * Colour.a);\n}";
+const char* msdf_font_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nfloat median(float r, float g, float b) {\nreturn max(min(r, g), min(max(r, g), b));\n}\nvoid main()\n{\nfloat px_range = 10.0;\nvec2 msdf_unit = px_range / vec2(textureSize(image, 0));\nvec3 sample = texture(image, TexCoords).rgb;\nfloat dist = median(sample.r, sample.g, sample.b) - 0.5;\ndist *= dot(msdf_unit, 0.5 / fwidth(TexCoords));\nfloat alpha = clamp(dist + 0.5, 0.0, 1.0);\nFragColor = vec4(Colour.rgb, alpha * Colour.a);\n}";
 
 void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::string& window_title)
 {
@@ -255,10 +255,6 @@ void Graphics::InitBatchRenderer()
     // colour
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, colour));
-
-    // font weight (todo: remove this eventually)
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, font_weight));
 
     // set up index element buffer
     glGenBuffers(1, &batch.IB);
@@ -695,40 +691,56 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), Vec2(sprite.width, sprite.height), frame_buffer_index, DIFFUSE, colour);
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, frame_buffer_index, DIFFUSE, colour);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, origin, frame_buffer_index, DIFFUSE, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), Vec2(sprite.width, sprite.height), frame_buffer_index, sprite_sheet_layer, colour);
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, frame_buffer_index, sprite_sheet_layer, colour);
+    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, DIFFUSE, colour);
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, position, size, frame_buffer_index, DIFFUSE, colour);
+    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
 void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
-    DrawSprite(sprite, position, Vec2(sprite.width, sprite.height), frame_buffer_index, sprite_sheet_layer, colour);
+    Vec2 size(sprite.width, sprite.height);
+    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;
@@ -754,11 +766,29 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2
 
     DoBatchRenderSetUp(frame_buffer_index, texture_id, indices_count);
 
+    Vec2 top_left(position.x - origin.x, position.y - origin.y);
+    Vec2 top_right(position.x - origin.x + size.x, position.y - origin.y);
+    Vec2 bottom_right(position.x + size.x - origin.x, position.y + size.y - origin.y);
+    Vec2 bottom_left(position.x - origin.x, position.y + size.y - origin.y);
+
+    if(angle_degrees != 0.0f)
+    {
+        float angle_rad = DegreesToRadians(angle_degrees);
+        float cos_angle = std::cos(angle_rad);
+        float sin_angle = std::sin(angle_rad);
+        Vec2 anchor_point(position.x, position.y);
+
+        Rotate(top_left, anchor_point, cos_angle, sin_angle);
+        Rotate(top_right, anchor_point, cos_angle, sin_angle);
+        Rotate(bottom_right, anchor_point, cos_angle, sin_angle);
+        Rotate(bottom_left, anchor_point, cos_angle, sin_angle);
+    }
+
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
     // bottom right
-    batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
+    batch.buffer_ptr->position.x = bottom_right.x * pixel_size;
+    batch.buffer_ptr->position.y = bottom_right.y * pixel_size;
     batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
@@ -766,8 +796,8 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2
     batch.buffer_ptr++;
 
     // top right
-    batch.buffer_ptr->position.x = (position.x + size.x) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y) * pixel_size;
+    batch.buffer_ptr->position.x = top_right.x * pixel_size;
+    batch.buffer_ptr->position.y = top_right.y * pixel_size;
     batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x + sprite.texture_w;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
@@ -775,8 +805,8 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2
     batch.buffer_ptr++;
 
     // top left
-    batch.buffer_ptr->position.x = (position.x) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y) * pixel_size;
+    batch.buffer_ptr->position.x = top_left.x * pixel_size;
+    batch.buffer_ptr->position.y = top_left.y * pixel_size;
     batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y;
@@ -784,8 +814,8 @@ void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2
     batch.buffer_ptr++;
 
     // bottom left
-    batch.buffer_ptr->position.x = (position.x) * pixel_size;
-    batch.buffer_ptr->position.y = (position.y + size.y) * pixel_size;
+    batch.buffer_ptr->position.x = bottom_left.x * pixel_size;
+    batch.buffer_ptr->position.y = bottom_left.y * pixel_size;
     batch.buffer_ptr->position.z = position.z * pixel_size;
     batch.buffer_ptr->tex_coords.x = sprite.texture_x;
     batch.buffer_ptr->tex_coords.y = sprite.texture_y + sprite.texture_h;
@@ -1786,14 +1816,6 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
     float adjusted_size = size * pixel_size;
 
-    float font_weight = 0.5f;
-
-    // todo: dumb
-    if(adjusted_size <= 30.0f)
-    {
-        font_weight = 1.0f;
-    }
-
     MSDF_Font* font = &msdf_fonts[font_id];
     float atlas_width = font->texture->width;
     float atlas_height = font->texture->height;
@@ -1843,7 +1865,6 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_right;
         batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // top right
@@ -1852,7 +1873,6 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_right;
         batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // top left
@@ -1861,7 +1881,6 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_left;
         batch.buffer_ptr->tex_coords.y = tex_top;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // bottom left
@@ -1870,7 +1889,6 @@ void Graphics::RenderText(const std::string& text, const Vec2& position, const s
         batch.buffer_ptr->tex_coords.x = tex_left;
         batch.buffer_ptr->tex_coords.y = tex_bottom;
         batch.buffer_ptr->colour = colour;
-        batch.buffer_ptr->font_weight = font_weight;
         batch.buffer_ptr++;
 
         // first tri indices

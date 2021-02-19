@@ -1,7 +1,6 @@
 #version 330 core
 in vec2 TexCoords;
 in vec4 Colour;
-in float FontWeight;
 
 out vec4 FragColor;
 
