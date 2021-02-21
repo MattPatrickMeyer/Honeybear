@@ -17,19 +17,19 @@ namespace Honeybear
         static Vec2 ZERO;
 
         // todo: remove member functions
-        float Dot(const Vec2& other);
-        float Magnitude();
-        float Distance(const Vec2& other);
+        float Dot(const Vec2& other) const;
+        float Magnitude() const;
+        float Distance(const Vec2& other) const;
 
-        Vec2 Normalised();
-        Vec2 Perp();
-        Vec2 Negated();
+        Vec2 Normalised() const;
+        Vec2 Perp() const;
+        Vec2 Negated() const;
         Vec2 Add(const Vec2& other) const;
         Vec2 Subtract(const Vec2& other) const;
-        Vec2 Rotated(const Vec2& anchor_point, float angle_deg);
-        Vec2 MovedInDirection(const Vec2& dir, float distance);
+        Vec2 Rotated(const Vec2& anchor_point, float angle_deg) const;
+        Vec2 MovedInDirection(const Vec2& dir, float distance) const;
 
-        bool NonZero();
+        bool NonZero() const;
 
         bool operator==(const Vec2& other) const;
         Vec2 operator-(const Vec2& other) const;
@@ -76,12 +76,15 @@ namespace Honeybear
     void RadiansToVector(const float radians, Vec2& v);
     void DegreesToVector(const float degrees, Vec2& v);
 
+    float SmallestAngleDiff(const float a, const float b);
+
     // -------------------
     // ** INTERPOLATION **
     // -------------------
 
     void Interp(float& value, const float a, const float b, const double t);
     void Interp(Vec2& value, const Vec2& a, const Vec2& b, const double t);
+    void Interp(Vec2& value, const Vec2& a, const Vec2& b, const Vec2& pivot_a, const Vec2& pivot_b, const double t);
     void Interp(Vec3& value, const Vec3& a, const Vec3& b, const double t);
     void Interp(Vec4& value, const Vec4& a, const Vec4& b, const double t);
 
@@ -113,6 +116,7 @@ namespace Honeybear
     // -------------------
     void Rotate(Vec2& value, const Vec2& origin, const float angle_deg);
     void Rotate(Vec2& value, const Vec2& origin, const float cos_angle, const float sin_angle);
+    float Distance(const Vec2& a, const Vec2& b);
 };
 
 #endif

@@ -65,28 +65,28 @@ Vec4::Vec4(const float x, const float y, const float z, const float w) :
 Vec4 Vec4::ZERO = Vec4();
 // --------------------------------
 
-float Vec2::Dot(const Vec2& other)
+float Vec2::Dot(const Vec2& other) const
 {
     return(x * other.x) + (y * other.y);
 }
 
-float Vec2::Magnitude()
+float Vec2::Magnitude() const
 {
     return std::sqrt(x*x + y*y);
 }
 
-Vec2 Vec2::Normalised()
+Vec2 Vec2::Normalised() const
 {
     float length = Magnitude();
     return Vec2(x / length, y / length);
 }
 
-Vec2 Vec2::Perp()
+Vec2 Vec2::Perp() const
 {
     return Vec2(y, -x);
 }
 
-Vec2 Vec2::Negated()
+Vec2 Vec2::Negated() const
 {
     return Vec2(-x, -y);
 }
@@ -101,12 +101,12 @@ Vec2 Vec2::Subtract(const Vec2& other) const
     return Vec2(x - other.x, y - other.y);
 }
 
-bool Vec2::NonZero()
+bool Vec2::NonZero() const
 {
     return std::abs(x) > 0.0f || std::abs(y) > 0.0f;
 }
 
-float Vec2::Distance(const Vec2& other)
+float Vec2::Distance(const Vec2& other) const
 {
     return Subtract(other).Magnitude();
 }
@@ -122,7 +122,7 @@ Vec2 Vec2::operator-(const Vec2& other) const
     return Subtract(other);
 }
 
-Vec2 Vec2::Rotated(const Vec2& anchor_point, float angle_deg)
+Vec2 Vec2::Rotated(const Vec2& anchor_point, float angle_deg) const
 {
     float angle_rad = angle_deg * (PI / 180.0f);
     float cos_angle = std::cos(angle_rad);
@@ -135,6 +135,11 @@ Vec2 Vec2::Rotated(const Vec2& anchor_point, float angle_deg)
     float y_rotated = anchor_point.y + (dx * sin_angle + dy * cos_angle);
 
     return Vec2(x_rotated, y_rotated);
+}
+
+float Honeybear::Distance(const Vec2& a, const Vec2& b)
+{
+    return a.Subtract(b).Magnitude();
 }
 
 void Honeybear::Rotate(Vec2& value, const Vec2& origin, const float angle_deg)
@@ -154,7 +159,7 @@ void Honeybear::Rotate(Vec2& value, const Vec2& origin, const float cos_angle, c
     value.y = origin.y + (dx * sin_angle + dy * cos_angle);
 }
 
-Vec2 Vec2::MovedInDirection(const Vec2& dir, float distance)
+Vec2 Vec2::MovedInDirection(const Vec2& dir, float distance) const
 {
     return Vec2(
         x + (dir.x * distance),
@@ -303,6 +308,13 @@ float Honeybear::EaseInOutBack(float t, float b, float c, float d)
 	return c / 2 * ((postFix) * t * (((s *= (1.525f)) + 1) * t + s) + 2) + b;
 }
 
+float Honeybear::SmallestAngleDiff(const float a, const float b)
+{
+    float max = PI * 2;
+    float da = std::fmod(b - a, max);
+    return std::fmod(2 * da, max) - da;
+}
+
 void Honeybear::Interp(float& value, const float a, const float b, const double t)
 {
     value = a + (b - a) * t;
@@ -312,6 +324,25 @@ void Honeybear::Interp(Vec2& value, const Vec2& a, const Vec2& b, const double t
 {
     Interp(value.x, a.x, b.x, t);
     Interp(value.y, a.y, b.y, t);
+}
+
+// todo: this would probably be better suited for Interp(Line a, Line b)
+// todo: this should take in reference to pivot and update it
+void Honeybear::Interp(Vec2& value, const Vec2& a, const Vec2& b, const Vec2& pivot_a, const Vec2& pivot_b, const double t)
+{
+    // todo: probably yikes this one
+    Vec2 pivot_to_a = a.Subtract(pivot_a);
+    Vec2 pivot_to_b = b.Subtract(pivot_b);
+    const float a_distance = pivot_to_a.Magnitude();
+    const float b_distance = pivot_to_b.Magnitude();
+    float a_angle = VectorToRadians(pivot_to_a.Normalised());
+    float b_angle = VectorToRadians(pivot_to_b.Normalised());
+    float angle_diff = SmallestAngleDiff(a_angle, b_angle);
+    float interp_distance;
+    Interp(interp_distance, a_distance, b_distance, t);
+    Vec2 interp_pivot;
+    Interp(interp_pivot, pivot_a, pivot_b, t);
+    value = interp_pivot.MovedInDirection(RadiansToVector(a_angle + angle_diff * t), interp_distance);
 }
 
 void Honeybear::Interp(Vec3& value, const Vec3& a, const Vec3& b, const double t)
