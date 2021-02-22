@@ -1985,3 +1985,28 @@ void Graphics::DisableDepthTesting()
     CheckAndStartNewBatch();
     glDisable(GL_DEPTH_TEST);
 }
+
+void Graphics::EnableScissorTesting()
+{
+    CheckAndStartNewBatch();
+    glEnable(GL_SCISSOR_TEST);
+}
+
+void Graphics::DisableScissorTesting()
+{
+    CheckAndStartNewBatch();
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void Graphics::SetScissorRegion(const int x, const int y, const int width, const int height)
+{
+    CheckAndStartNewBatch();
+    glScissor(x, y, width, height);
+}
+
+void Graphics::SetScissorRegion(const uint32_t frame_buffer_index, const int x, const int y, const int width, const int height)
+{
+    CheckAndStartNewBatch();
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    glScissor(x * pixel_size, y * pixel_size, width * pixel_size, height * pixel_size);
+}

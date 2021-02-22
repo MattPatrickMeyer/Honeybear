@@ -279,6 +279,11 @@ namespace Honeybear
         void EnableDepthTesting();
         void DisableDepthTesting();
 
+        void EnableScissorTesting();
+        void DisableScissorTesting();
+        void SetScissorRegion(const int x, const int y, const int width, const int height);
+        void SetScissorRegion(const uint32_t frame_buffer_index, const int x, const int y, const int width, const int height);
+
         void InitBatchRenderer();
         void BeginBatch();
         void EndBatch();
