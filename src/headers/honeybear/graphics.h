@@ -258,6 +258,9 @@ namespace Honeybear
         void FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 
+        void DrawCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, Vec4* colours, size_t num_indices, int* indices, const uint32_t frame_buffer_index);
+        void FillCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, Vec4* colours, size_t num_indices, int* indices, const uint32_t frame_buffer_index, const int texture_id = -1);
+
         uint32_t AddFrameBuffer();
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);

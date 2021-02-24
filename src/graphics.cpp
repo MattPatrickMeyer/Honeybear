@@ -1024,6 +1024,68 @@ void Graphics::FillConvexPoly(const std::vector<Vec2>& points, const uint32_t fr
     batch.current_index_offset += points.size();
 }
 
+// todo: DrawCustom and FillCustom are kinda the same thing
+void Graphics::DrawCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, Vec4* colours, size_t num_indices, int* indices, const uint32_t frame_buffer_index)
+{
+    DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, num_indices, LINES);
+
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    for(size_t i = 0; i < num_verts; ++i)
+    {
+        batch.buffer_ptr->position.x = positions[i].x * pixel_size;
+        batch.buffer_ptr->position.y = positions[i].y * pixel_size;
+        batch.buffer_ptr->position.z = positions[i].z * pixel_size;
+        batch.buffer_ptr->tex_coords = tex_coords[i];
+        batch.buffer_ptr->colour     = colours[i];
+        batch.buffer_ptr++;
+    }
+
+    for(size_t i = 0; i < num_indices; ++i)
+    {
+        batch.index_buffer[batch.index_count] = batch.current_index_offset + indices[i];
+        batch.index_count++;
+    }
+
+    batch.current_index_offset += num_verts;
+}
+
+void Graphics::FillCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, Vec4* colours, size_t num_indices, int* indices, const uint32_t frame_buffer_index, const int texture_id)
+{
+    GLuint tex_id;
+
+    if(texture_id == -1)
+    {
+        tex_id = batch.shape_texture;
+    }
+    else
+    {
+        tex_id = texture_id;
+    }
+
+    DoBatchRenderSetUp(frame_buffer_index, tex_id, num_indices, TEXTURE);
+
+    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+
+    for(size_t i = 0; i < num_verts; ++i)
+    {
+        batch.buffer_ptr->position.x = positions[i].x * pixel_size;
+        batch.buffer_ptr->position.y = positions[i].y * pixel_size;
+        batch.buffer_ptr->position.z = positions[i].z * pixel_size;
+        batch.buffer_ptr->tex_coords = tex_coords[i];
+        batch.buffer_ptr->colour     = colours[i];
+        batch.buffer_ptr++;
+    }
+
+    for(size_t i = 0; i < num_indices; ++i)
+    {
+        batch.index_buffer[batch.index_count] = batch.current_index_offset + indices[i];
+        batch.index_count++;
+    }
+
+    batch.current_index_offset += num_verts;
+}
+
 void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 2;
@@ -1140,7 +1202,7 @@ void Graphics::FlushBatch()
     glDrawElements(render_type, batch.index_count, GL_UNSIGNED_INT, nullptr);
     batch.index_count = 0;
     batch.current_index_offset = 0;
-    glBindVertexArray(0); // todo: @performance maybe not needed?
+    glBindVertexArray(0); // speed: @performance maybe not needed?
 
     if(should_reset_shader)
     {
