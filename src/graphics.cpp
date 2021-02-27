@@ -229,6 +229,51 @@ void Graphics::UpdateScreenRenderData()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void Graphics::UpdateScreenRenderData(const uint32_t frame_buffer_index, const float x, const float y, const float w, const float h)
+{
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+
+    screen_render_data.width = window_width;
+    screen_render_data.height = window_height;
+
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    float fb_width = frame_buffer->width;
+    float fb_height = frame_buffer->height;
+
+    Vec4 colour(1.0f, 1.0f, 1.0f, 1.0f);
+
+    Vertex buffer[4];
+    // bottom right
+    buffer[0].position.x = window_width;
+    buffer[0].position.y = window_height;
+    buffer[0].tex_coords.x = (x + w) / fb_width;
+    buffer[0].tex_coords.y = (y + h) / fb_height;
+    buffer[0].colour = colour;
+    // top right
+    buffer[1].position.x = window_width;
+    buffer[1].position.y = 0.0f;
+    buffer[1].tex_coords.x = (x + w) / fb_width;
+    buffer[1].tex_coords.y = y / fb_height;
+    buffer[1].colour = colour;
+    // top left
+    buffer[2].position.x = 0.0f;
+    buffer[2].position.y = 0.0f;
+    buffer[2].tex_coords.x = x / fb_width;
+    buffer[2].tex_coords.y = y / fb_height;
+    buffer[2].colour = colour;
+    // bottom left
+    buffer[3].position.x = 0.0f;
+    buffer[3].position.y = window_height;
+    buffer[3].tex_coords.x = x / fb_width;
+    buffer[3].tex_coords.y = (y + h) / fb_height;
+    buffer[3].colour = colour;
+
+    glBindBuffer(GL_ARRAY_BUFFER, screen_render_data.quad_VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
 void Graphics::InitBatchRenderer()
 {
     // set up batch
@@ -242,7 +287,7 @@ void Graphics::InitBatchRenderer()
 
     glGenBuffers(1, &batch.VBO);
     glBindBuffer(GL_ARRAY_BUFFER, batch.VBO);
-    glBufferData(GL_ARRAY_BUFFER, max_vertex_count * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, max_vertex_count * sizeof(Vertex), nullptr, GL_STREAM_DRAW);
 
     // position
     glEnableVertexAttribArray(0);
@@ -259,7 +304,7 @@ void Graphics::InitBatchRenderer()
     // set up index element buffer
     glGenBuffers(1, &batch.IB);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, batch.IB);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, max_index_count * sizeof(uint32_t), nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, max_index_count * sizeof(uint32_t), nullptr, GL_STREAM_DRAW);
 
     // set up the dummy shape texture (it's just a 1x1 pixel white image)
     glGenTextures(1, &batch.shape_texture);
@@ -564,7 +609,7 @@ void Graphics::SetShaderFramebufferTexture(const std::string& shader_id, const s
 {
     CheckAndStartNewBatch();
     ResolveMultiSampledFrameBuffer(frame_buffer_index);
-    GLuint texture_id = frame_buffers[frame_buffer_index].tex_colour_buffer;
+    GLuint texture_id = GetFrameBufferTextureID(frame_buffer_index);
     SetShaderTexture(shader_id, uniform_name, texture_id, texture_unit);
 }
 
@@ -683,64 +728,66 @@ Texture* Graphics::LoadTexture(const std::string& texture_file_name, const Filte
 
 void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
 {
-    glActiveTexture(texture_units[texture_unit]);
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-
-    bound_textures[texture_unit] = texture_id;
+    if(bound_textures[texture_unit] != texture_id)
+    {
+        glActiveTexture(texture_units[texture_unit]);
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        bound_textures[texture_unit] = texture_id;
+    }
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const uint32_t frame_buffer_index, const Vec4& colour)
-{
-    Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
-}
-
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, origin, frame_buffer_index, DIFFUSE, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, angle_degrees, origin, frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
-{
-    DrawSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
-}
-
-void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
-    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+    RenderSprite(sprite, Vec3(position.x, position.y, 0.0f), size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
-    DrawSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
+    RenderSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
 }
 
-void Graphics::DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+void Graphics::RenderSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour)
+{
+    RenderSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, DIFFUSE, colour);
+}
+
+void Graphics::RenderSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
+{
+    Vec2 size(sprite.width, sprite.height);
+    RenderSprite(sprite, position, size, 0.0f, Vec2(0.0f), frame_buffer_index, sprite_sheet_layer, colour);
+}
+
+void Graphics::RenderSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour)
 {
     int indices_count = 6;
     uint32_t texture_id = sprite.sprite_sheet->diffuse->ID;
@@ -1204,6 +1251,10 @@ void Graphics::FlushBatch()
     batch.current_index_offset = 0;
     glBindVertexArray(0); // speed: @performance maybe not needed?
 
+    // todo: this might be wrong
+    FrameBuffer* current_buffer = &frame_buffers[current_frame_buffer_index];
+    current_buffer->resolved = false;
+
     if(should_reset_shader)
     {
         ActivateShader(current_shader);
@@ -1214,7 +1265,7 @@ void Graphics::ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index)
 {
     FrameBuffer* current_frame_buffer = &frame_buffers[current_frame_buffer_index];
     FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
-    if(frame_buffer->multisampled)
+    if(frame_buffer->multisampled && !frame_buffer->resolved)
     {
         std::string current_shader = activated_shader_id;
         bool should_reset_shader = false;
@@ -1230,6 +1281,8 @@ void Graphics::ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index)
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_buffer->intermediate_FBO);
         glBlitFramebuffer(0, 0, frame_buffer->width, frame_buffer->height, 0, 0, frame_buffer->width, frame_buffer->height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, current_frame_buffer->FBO);
+
+        frame_buffer->resolved = true;
 
         if(should_reset_shader)
         {
@@ -1365,6 +1418,7 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
     frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = true;
+    frame_buffer->resolved = false;
     frame_buffer->samples = samples;
     frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
@@ -1457,6 +1511,14 @@ void Graphics::AttachDepthBuffer(const uint32_t frame_buffer_index)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+uint32_t Graphics::GetFrameBufferTextureID(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    return frame_buffer->multisampled
+        ? frame_buffer->intermediate_tex_colour_buffer
+        : frame_buffer->tex_colour_buffer;
+}
+
 uint32_t Graphics::AddFrameBuffer()
 {
     int window_width, window_height;
@@ -1489,6 +1551,7 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
     frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
     frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = false;
+    frame_buffer->resolved = false;
     frame_buffer->depth_testing_enabled = false;
     frame_buffer->clear_colour = Vec4(1.0f, 1.0f, 1.0f, 0.0f);
 
@@ -1669,17 +1732,13 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index)
 
 void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset)
 {
-    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
-
     // before we render the frame buffer to the screen, make sure all batched quads have been flushed to their buffer
     CheckAndStartNewBatch();
 
     // will do nothing if the frame buffer is not multisampled
     ResolveMultiSampledFrameBuffer(frame_buffer_index);
 
-    GLuint source_colour_buffer = frame_buffer->multisampled
-        ? frame_buffer->intermediate_tex_colour_buffer
-        : frame_buffer->tex_colour_buffer;
+    GLuint source_colour_buffer = GetFrameBufferTextureID(frame_buffer_index);
 
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
@@ -1696,18 +1755,41 @@ void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& 
     glBindVertexArray(0);
 }
 
+void Graphics::RenderFrameBuffer(const uint32_t frame_buffer_index, const float src_x, const float src_y, const float src_w, const float src_h)
+{
+    CheckAndStartNewBatch();
+    ResolveMultiSampledFrameBuffer(frame_buffer_index);
+    GLuint source_colour_buffer = GetFrameBufferTextureID(frame_buffer_index);
+
+    int window_width, window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    glViewport(0, 0, window_width, window_height);
+
+    SetShaderProjection(activated_shader_id, 0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
+
+    // update the screen render quad vao tex coords to the src rectangle provided
+    UpdateScreenRenderData(frame_buffer_index, src_x, src_y, src_w, src_h);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    current_fbo = 0;
+    BindTexture(source_colour_buffer, 0);
+    glBindVertexArray(screen_render_data.quad_VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    glBindVertexArray(0);
+
+    // reset the screen render data quad vao
+    UpdateScreenRenderData();
+}
+
 void Graphics::RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index)
 {
-    FrameBuffer* source_frame_buffer = &frame_buffers[source_frame_buffer_index];
     FrameBuffer* dest_frame_buffer = &frame_buffers[dest_frame_buffer_index];
 
     CheckAndStartNewBatch();
 
     ResolveMultiSampledFrameBuffer(source_frame_buffer_index);
 
-    GLuint source_colour_buffer = source_frame_buffer->multisampled
-        ? source_frame_buffer->intermediate_tex_colour_buffer
-        : source_frame_buffer->tex_colour_buffer;
+    GLuint source_colour_buffer = GetFrameBufferTextureID(source_frame_buffer_index);
 
     BindFrameBuffer(dest_frame_buffer_index);
     BindTexture(source_colour_buffer, 0);
@@ -1720,10 +1802,8 @@ void Graphics::RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index,
 {
     int indices_count = 6;
 
-    FrameBuffer* src = &frame_buffers[source_frame_buffer_index];
-    GLuint tex_buffer = src->multisampled ? src->intermediate_tex_colour_buffer : src->tex_colour_buffer;
-
     ResolveMultiSampledFrameBuffer(source_frame_buffer_index);
+    GLuint tex_buffer = GetFrameBufferTextureID(source_frame_buffer_index);
 
     DoBatchRenderSetUp(dest_frame_buffer_index, tex_buffer, indices_count);
 

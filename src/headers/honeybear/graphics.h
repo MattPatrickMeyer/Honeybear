@@ -115,6 +115,7 @@ namespace Honeybear
             bool use_game_pixel_scaling;
             bool mapped_to_window_resolution;
             bool multisampled;
+            bool resolved;
             bool depth_testing_enabled;
             uint32_t samples;
             Vec4 clear_colour;
@@ -200,6 +201,7 @@ namespace Honeybear
 
         void InitScreenRenderData();
         void UpdateScreenRenderData();
+        void UpdateScreenRenderData(const uint32_t frame_buffer_index, const float x, const float y, const float w, const float h);
         void InitUniformBlocks();
 
         void ChangeResolution(const uint32_t width, const uint32_t height);
@@ -226,7 +228,6 @@ namespace Honeybear
         void SetShaderVec4Array(const std::string& shader_id, const std::string& uniform_name, const Vec4* values, const size_t n);
         void SetShaderTexture(const std::string& shader_id, const std::string& uniform_name, const GLuint texture_id, const uint8_t texture_unit);
         void SetShaderFramebufferTexture(const std::string& shader_id, const std::string& uniform_name, const uint32_t frame_buffer_index, const uint8_t texture_unit);
-        void CheckAndStartNewBatch();
 
         Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
@@ -236,16 +237,16 @@ namespace Honeybear
         void CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h);
         Sprite* GetSprite(const uint32_t sprite_id);
 
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
-        void DrawSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec2& position, const Vec2& size, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const uint32_t frame_buffer_index, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec3& position, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
+        void RenderSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
 
         void DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame_buffer_index, const Vec4& colour);
         void DrawRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
@@ -265,10 +266,12 @@ namespace Honeybear
         uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
+        uint32_t GetFrameBufferTextureID(const uint32_t frame_buffer_index);
         void AttachDepthBuffer(const uint32_t frame_buffer_index);
         void ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index, const Vec2& offset);
+        void RenderFrameBuffer(const uint32_t frame_buffer_index, const float src_x, const float src_y, const float src_w, const float src_h);
         void RenderFrameBufferToFrameBuffer(const uint32_t source_frame_buffer_index, const uint32_t dest_frame_buffer_index);
         void RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index, const float x, const float y, const float w, const float h, const uint32_t dest_frame_buffer_index, const Vec4& colour = Vec4(1.0f));
         void BindFrameBuffer(const uint32_t frame_buffer_index);
@@ -291,6 +294,7 @@ namespace Honeybear
         void BeginBatch();
         void EndBatch();
         void FlushBatch();
+        void CheckAndStartNewBatch();
         void DoBatchRenderSetUp(const uint32_t frame_buffer_index, const GLuint tex_id, const uint32_t num_indices, BatchType batch_type = TEXTURE);
 
         MSDF_Font* LoadMSDFFont(const std::string& font_id, const std::string& font_atlas_file_name, const std::string& font_data_file_name);

@@ -113,7 +113,7 @@ void Implementation::Draw()
     Graphics::FillTriangle(Vec2(0.0f + x_test, 0.0f), Vec2(150.0f + x_test, 200.0f), Vec2(0.0f + x_test, 200.0f), multi_sample_frame_buffer, Vec4(1.0f));
     Graphics::FillCircle(mouse_pos, 50.0f, multi_sample_frame_buffer, Vec4(1.0f));
 
-    Graphics::DrawSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
+    Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
 
 
     // Graphics::ActivateShader("second_tex_test");
