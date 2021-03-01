@@ -7,6 +7,7 @@
 #include "honeybear/input.h"
 #include "honeybear/geometry.h"
 #include "honeybear/stb_image.h"
+#include "honeybear/engine.h"
 
 using namespace Honeybear;
 
@@ -18,7 +19,7 @@ uint32_t multi_sample_frame_buffer;
 
 Texture* palette;
 
-Implementation::Implementation()
+void Implementation::Init()
 {
     // AllocConsole();
     // freopen("CONOUT$", "w", stdout);
@@ -33,6 +34,12 @@ Implementation::Implementation()
     Engine::Init(window_width, window_height, "Honeybear!");
     Engine::SetGameSize(640, 360);
     Engine::SetFixedTimeStep(1.0f / 240.0f);
+
+    Engine::SetBeginFrameCallback(BeginFrame);
+    Engine::SetDrawCallback(Draw);
+    Engine::SetUpdateFixedCallback(UpdateFixed);
+    Engine::SetHandleInputCallback(HandleInput);
+    Engine::SetInterpolateStateCallback(InterpolateState);
 
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
@@ -56,6 +63,8 @@ Implementation::Implementation()
     Graphics::LoadMSDFFont("roboto_mono",   "res/fonts/roboto_mono/atlas.png", "res/fonts/roboto_mono/data.csv");
 
     std::cout << stbi_failure_reason() << std::endl;
+
+    Engine::RunFixed();
 }
 
 bool key_down = false;
@@ -64,16 +73,6 @@ float test = 0.0f;
 float prev_test = 0.0f;
 float angle = 0.0f;
 float another_test = 20.0f;
-
-void Implementation::Update(const float dt)
-{
-    if(key_down)
-    {
-        x_test += 10.0f * dt;
-    }
-    angle += dt;
-    another_test = (std::sin(angle) * 200) + 200;
-}
 
 void Implementation::UpdateFixed(const double dt)
 {
@@ -113,7 +112,10 @@ void Implementation::Draw()
     Graphics::FillTriangle(Vec2(0.0f + x_test, 0.0f), Vec2(150.0f + x_test, 200.0f), Vec2(0.0f + x_test, 200.0f), multi_sample_frame_buffer, Vec4(1.0f));
     Graphics::FillCircle(mouse_pos, 50.0f, multi_sample_frame_buffer, Vec4(1.0f));
 
-    Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
+    if(Input::IsMouseButtonHeld(Input::MOUSE_BUTTON_LEFT))
+    {
+        Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
+    }
 
 
     // Graphics::ActivateShader("second_tex_test");
@@ -137,6 +139,10 @@ bool v_sync = false;
 
 void Implementation::HandleInput()
 {
+    if(Input::WasKeyPressed(Input::KEY_ESC))
+    {
+        Engine::Quit();
+    }
     if(Input::IsKeyHeld(Input::KEY_D))
     {
         key_down = true;

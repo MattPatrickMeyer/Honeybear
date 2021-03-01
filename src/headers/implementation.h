@@ -1,13 +1,10 @@
 #ifndef IMPLEMENTATION_H
 #define IMPLEMENTATION_H
 
-#include "honeybear/engine.h"
-
-struct Implementation : public Honeybear::Engine
+namespace Implementation
 {
-    Implementation();
+    void Init();
     void Draw();
-    void Update(const float dt);
     void BeginFrame();
     void UpdateFixed(const double dt);
     void InterpolateState(const double t);

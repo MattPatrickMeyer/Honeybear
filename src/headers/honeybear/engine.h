@@ -10,32 +10,46 @@ namespace Honeybear
     extern float game_width;
     extern float game_height;
     extern float game_speed;
-    extern double fixed_time_step;
-    extern double total_elapsed_time;
 
-    struct Engine
+    namespace Engine
     {
-        static int average_fps;
-        static float last_frame_time;
+        extern int average_fps;
+        extern float last_frame_time;
+        extern double fixed_time_step;
+        extern double total_elapsed_time;
+
+        typedef void (*draw_function)(void);
+        typedef void (*update_function)(const float dt);
+        typedef void (*begin_frame_function)(void);
+        typedef void (*update_fixed_function)(const double dt);
+        typedef void (*interpolate_state_function)(const double t);
+        typedef void (*handle_input_function)(void);
+
+        extern draw_function draw_func;
+        extern update_function update_func;
+        extern begin_frame_function begin_frame_func;
+        extern update_fixed_function update_fixed_func;
+        extern interpolate_state_function interpolate_state_func;
+        extern handle_input_function handle_input_func;
 
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
         void RunFixed();
         void Render();
         void ProcessInput();
+        void Quit();
 
         double Ticks();
 
-        virtual void Draw() = 0;
-        virtual void Update(const float dt) = 0;
-        virtual void BeginFrame() = 0;
-        virtual void UpdateFixed(const double dt) = 0;
-        virtual void InterpolateState(const double t) = 0;
-        virtual void HandleInput() = 0;
+        void SetDrawCallback(draw_function func);
+        void SetUpdateCallback(update_function func);
+        void SetBeginFrameCallback(begin_frame_function func);
+        void SetUpdateFixedCallback(update_fixed_function func);
+        void SetInterpolateStateCallback(interpolate_state_function func);
+        void SetHandleInputCallback(handle_input_function func);
 
-        protected:
-            void SetGameSize(const float w, const float h);
-            void SetFixedTimeStep(const float value);
+        void SetGameSize(const float w, const float h);
+        void SetFixedTimeStep(const float value);
     };
 };
 

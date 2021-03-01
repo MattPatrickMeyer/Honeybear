@@ -7,6 +7,9 @@ using namespace Honeybear;
 std::unordered_map<Input::Key, bool> Input::held_keys;
 std::unordered_map<Input::Key, bool> Input::pressed_keys;
 std::unordered_map<Input::Key, bool> Input::released_keys;
+std::unordered_map<Input::MouseButton, bool> Input::held_mouse_buttons;
+std::unordered_map<Input::MouseButton, bool> Input::pressed_mouse_buttons;
+std::unordered_map<Input::MouseButton, bool> Input::released_mouse_buttons;
 
 std::unordered_map<int, Input::Key> glfw_key_map =
 {
@@ -88,9 +91,17 @@ std::unordered_map<int, Input::Key> glfw_key_map =
     { GLFW_KEY_END,           Input::KEY_END }
 };
 
+std::unordered_map<int, Input::MouseButton> glfw_mouse_button_map =
+{
+    { GLFW_MOUSE_BUTTON_LEFT,   Input::MOUSE_BUTTON_LEFT },
+    { GLFW_MOUSE_BUTTON_RIGHT,  Input::MOUSE_BUTTON_RIGHT },
+    { GLFW_MOUSE_BUTTON_MIDDLE, Input::MOUSE_BUTTON_MIDDLE }
+};
+
 void Input::Init()
 {
     glfwSetKeyCallback(Graphics::window, KeyCallback);
+    glfwSetMouseButtonCallback(Graphics::window, MouseButtonCallback);
 }
 
 void Input::BeginNewFrame()
@@ -136,7 +147,7 @@ void Input::CursorGamePosition(GLFWwindow* window, Vec2* pos)
 void Input::KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int action, int mods)
 {
     // just return if we don't know about this key
-    std::unordered_map<int, Key>::iterator it = glfw_key_map.find(glfw_key);
+    std::unordered_map<int, Input::Key>::iterator it = glfw_key_map.find(glfw_key);
     if(it == glfw_key_map.end())
     {
         return;
@@ -156,6 +167,29 @@ void Input::KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int acti
     }
 }
 
+void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+    // just return if we don't know about this mouse button
+    std::unordered_map<int, Input::MouseButton>::iterator it = glfw_mouse_button_map.find(button);
+    if(it == glfw_mouse_button_map.end())
+    {
+        return;
+    }
+
+    Input::MouseButton mouse_button = it->second;
+
+    if(action == GLFW_PRESS)
+    {
+        pressed_mouse_buttons[mouse_button] = true;
+        held_mouse_buttons[mouse_button] = true;
+    }
+    else if(action == GLFW_RELEASE)
+    {
+        released_mouse_buttons[mouse_button] = true;
+        held_mouse_buttons[mouse_button] = false;
+    }
+}
+
 bool Input::WasKeyPressed(Key key)
 {
     return pressed_keys[key];
@@ -169,4 +203,19 @@ bool Input::WasKeyReleased(Key key)
 bool Input::IsKeyHeld(Key key)
 {
     return held_keys[key];
+}
+
+bool Input::WasMouseButtonPressed(MouseButton mouse_button)
+{
+    return pressed_mouse_buttons[mouse_button];
+}
+
+bool Input::WasMouseButtonReleased(MouseButton mouse_button)
+{
+    return released_mouse_buttons[mouse_button];
+}
+
+bool Input::IsMouseButtonHeld(MouseButton mouse_button)
+{
+    return held_mouse_buttons[mouse_button];
 }

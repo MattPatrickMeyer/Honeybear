@@ -2,7 +2,6 @@
 
 int main()
 {
-    Implementation game;
-    game.RunFixed();
+    Implementation::Init();
     return 0;
 }

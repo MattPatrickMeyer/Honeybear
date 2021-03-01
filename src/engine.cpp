@@ -11,10 +11,18 @@ using namespace Honeybear;
 float Honeybear::game_width;
 float Honeybear::game_height;
 float Honeybear::game_speed = 1.0f;
-double Honeybear::fixed_time_step;
-double Honeybear::total_elapsed_time = 0.0f;
+
 int Honeybear::Engine::average_fps;
 float Honeybear::Engine::last_frame_time;
+double Honeybear::Engine::fixed_time_step;
+double Honeybear::Engine::total_elapsed_time = 0.0f;
+
+Engine::draw_function Engine::draw_func;
+Engine::update_function Engine::update_func;
+Engine::begin_frame_function Engine::begin_frame_func;
+Engine::update_fixed_function Engine::update_fixed_func;
+Engine::interpolate_state_function Engine::interpolate_state_func;
+Engine::handle_input_function Engine::handle_input_func;
 
 namespace
 {
@@ -47,7 +55,7 @@ void Engine::RunFixed()
 
         ProcessInput();
 
-        BeginFrame();
+        begin_frame_func();
 
         double new_time = Ticks();
         double frame_time = (new_time - current_time) * game_speed;
@@ -63,7 +71,8 @@ void Engine::RunFixed()
 
         while(accumulator >= fixed_time_step)
         {
-            UpdateFixed(fixed_time_step);
+            //UpdateFixed(fixed_time_step);
+            update_fixed_func(fixed_time_step);
             elapsed_time += fixed_time_step;
             total_elapsed_time = elapsed_time;
             accumulator -= fixed_time_step;
@@ -73,7 +82,8 @@ void Engine::RunFixed()
         const double alpha = accumulator / fixed_time_step;
 
         // interpolate the game from previous to current state based on alpha value
-        InterpolateState(alpha);
+        //InterpolateState(alpha);
+        interpolate_state_func(alpha);
 
         Render();
 
@@ -115,13 +125,15 @@ void Engine::Run()
             {
                 float dt = std::min(total_frame_time, MAX_TIME_STEP) * game_speed;
                 total_frame_time -= MAX_TIME_STEP;
-                Update(dt);
+                //Update(dt);
+                update_func(dt);
             }
         }
         else
         {
             float dt = frame_time * game_speed;
-            Update(dt);
+            //Update(dt);
+            update_func(dt);
         }
 
         Render();
@@ -156,19 +168,22 @@ void Engine::Render()
     Graphics::Clear();
     Graphics::ClearFrameBuffers();
 
-    Draw();
+    //Draw();
+    draw_func();
 
     Graphics::SwapBuffers();
 }
 
 void Engine::ProcessInput()
 {
-    if(Input::WasKeyPressed(Input::KEY_ESC))
-    {
-        glfwSetWindowShouldClose(Graphics::window, true);
-    }
+    //HandleInput();
+    handle_input_func();
+}
 
-    HandleInput();
+void Engine::Quit()
+{
+    // todo: other stuff here
+    glfwSetWindowShouldClose(Graphics::window, true);
 }
 
 void Engine::SetGameSize(const float w, const float h)
@@ -180,4 +195,34 @@ void Engine::SetGameSize(const float w, const float h)
 void Engine::SetFixedTimeStep(const float value)
 {
     fixed_time_step = value;
+}
+
+void Engine::SetDrawCallback(draw_function func)
+{
+    draw_func = func;
+}
+
+void Engine::SetUpdateCallback(update_function func)
+{
+    update_func = func;
+}
+
+void Engine::SetBeginFrameCallback(begin_frame_function func)
+{
+    begin_frame_func = func;
+}
+
+void Engine::SetUpdateFixedCallback(update_fixed_function func)
+{
+    update_fixed_func = func;
+}
+
+void Engine::SetInterpolateStateCallback(interpolate_state_function func)
+{
+    interpolate_state_func = func;
+}
+
+void Engine::SetHandleInputCallback(handle_input_function func)
+{
+    handle_input_func = func;
 }
