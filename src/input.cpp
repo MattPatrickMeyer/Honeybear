@@ -109,6 +109,8 @@ void Input::BeginNewFrame()
     // clear the pressed and released keys. these would have been queried by now
     pressed_keys.clear();
     released_keys.clear();
+    pressed_mouse_buttons.clear();
+    released_mouse_buttons.clear();
 }
 
 void Input::CursorWindowPosition(GLFWwindow* window, float* x_pos, float* y_pos)
