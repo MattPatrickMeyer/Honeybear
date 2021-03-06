@@ -70,6 +70,7 @@ namespace Honeybear
         Vec2 position;
         float radius;
 
+        Circle();
         Circle(const Vec2 position, const float radius);
         Circle(const float x, const float y, const float radius);
     };

@@ -985,6 +985,11 @@ void Graphics::FillRectangle(const float x, const float y, const float z, const 
 
 void Graphics::FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour)
 {
+    if(!(radius > 0.0f))
+    {
+        return;
+    }
+
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
     // -----------------------------
@@ -1176,6 +1181,11 @@ void Graphics::DrawRectangle(const float x, const float y, const float w, const 
 
 void Graphics::DrawCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour)
 {
+    if(!(radius > 0.0f))
+    {
+        return;
+    }
+
     float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
 
     // -----------------------------

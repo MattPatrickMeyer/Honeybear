@@ -72,6 +72,11 @@ bool Honeybear::RectangleContainsPoint(const Rectangle& rectangle, const Vec2 po
     return true;
 }
 
+Circle::Circle() :
+    position(0.0f),
+    radius(0.0f)
+{}
+
 Circle::Circle(const Vec2 position, const float radius) : 
     position(position),
     radius(radius)
