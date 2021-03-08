@@ -1,4 +1,4 @@
-//#include <Windows.h>
+#include <Windows.h>
 #include <math.h>
 #include <iostream>
 #include <algorithm>
@@ -21,8 +21,8 @@ Texture* palette;
 
 void Implementation::Init()
 {
-    // AllocConsole();
-    // freopen("CONOUT$", "w", stdout);
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
 
     // int window_width = 2560;
     // int window_height = 1440;
@@ -43,6 +43,8 @@ void Implementation::Init()
 
     Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
+    //Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
+    //Graphics::LoadShader("msdf_font", "res/shaders/msdf_font.vert", "res/shaders/msdf_font.frag");
 
     // SpriteSheet* sprites = Graphics::LoadSpriteSheet("sprites", "res/images/sprites.png", nullptr, nullptr, Graphics::NEAREST);
     // SpriteSheet* ui =      Graphics::LoadSpriteSheet("ui",      "res/images/ui.png",      nullptr, nullptr, Graphics::LINEAR);
@@ -55,6 +57,9 @@ void Implementation::Init()
     ui_frame_buffer =           Graphics::AddFrameBuffer();
     little_frame_buffer =       Graphics::AddFrameBuffer(100.0f, 100.0f, false);
     multi_sample_frame_buffer = Graphics::AddMultiSampledFrameBuffer(8);
+
+    Graphics::SetClearColour(ui_frame_buffer, Vec4(0.0f));
+    Graphics::SetClearColour(Vec4(0.47f, 0.54f, 0.67f, 1.0f));
 
     //Graphics::SetClearColour(Vec4(1.0f, 0.5f, 0.0f, 1.0f));
     //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
@@ -97,8 +102,8 @@ void Implementation::Draw()
     float game_speed_width, game_speed_height;
     Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 10.0f, &game_speed_width, &game_speed_height);
 
-    Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer);
-    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
+    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 4.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 10.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -114,9 +119,8 @@ void Implementation::Draw()
 
     if(Input::IsMouseButtonHeld(Input::MOUSE_BUTTON_LEFT))
     {
-        Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer);
+        Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
-
 
     // Graphics::ActivateShader("second_tex_test");
     // Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", ui_frame_buffer, 1);

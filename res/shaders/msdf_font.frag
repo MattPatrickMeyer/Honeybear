@@ -1,6 +1,7 @@
 #version 330 core
 in vec2 TexCoords;
 in vec4 Colour;
+in float DistanceFactor;
 
 out vec4 FragColor;
 
@@ -12,12 +13,9 @@ float median(float r, float g, float b) {
 
 void main()
 {    
-    float px_range = 10.0;
-    vec2 msdf_unit = px_range / vec2(textureSize(image, 0));
     vec3 sample = texture(image, TexCoords).rgb;
-    float dist = median(sample.r, sample.g, sample.b) - 0.5;
-    dist *= dot(msdf_unit, 0.5 / fwidth(TexCoords));
-    float alpha = clamp(dist + 0.5, 0.0, 1.0);
-
-    FragColor = vec4(Colour.rgb, alpha * Colour.a);
+    float sigDist = DistanceFactor*(median(sample.r, sample.g, sample.b) - 0.5);
+    float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
+    opacity *= Colour.a;
+    FragColor = vec4(Colour.rgb * opacity, opacity);
 }
