@@ -68,6 +68,7 @@ void Engine::RunFixed()
 
         current_time = new_time;
         accumulator += frame_time;
+        last_frame_time = frame_time;
 
         while(accumulator >= fixed_time_step)
         {

@@ -82,7 +82,7 @@ float another_test = 20.0f;
 void Implementation::UpdateFixed(const double dt)
 {
     prev_test = test;
-    test += dt;
+    //test += dt;
     angle += dt;
 }
 
@@ -91,7 +91,7 @@ float inter_test = 0.0f;
 void Implementation::Draw()
 {
     Vec2 mouse_pos;
-    Input::CursorGamePosition(Graphics::window, &mouse_pos);
+    Input::CursorGamePosition(&mouse_pos);
 
     float fps_width, fps_height;
     Graphics::CalcTextDimensions(std::to_string(Engine::average_fps), "roboto_mono", 10.0f, &fps_width, &fps_height);
@@ -102,6 +102,7 @@ void Implementation::Draw()
     float game_speed_width, game_speed_height;
     Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 10.0f, &game_speed_width, &game_speed_height);
 
+    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 100.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
     Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
     Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 4.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
@@ -198,4 +199,12 @@ void Implementation::InterpolateState(const double t)
 
 void Implementation::BeginFrame()
 {
+    if(Input::MouseScrolledUp())
+    {
+        test += 1.0f;
+    }
+    if(Input::MouseScrolledDown())
+    {
+        test -= 1.0f;
+    }
 }

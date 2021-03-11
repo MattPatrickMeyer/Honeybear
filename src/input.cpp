@@ -10,6 +10,8 @@ std::unordered_map<Input::Key, bool> Input::released_keys;
 std::unordered_map<Input::MouseButton, bool> Input::held_mouse_buttons;
 std::unordered_map<Input::MouseButton, bool> Input::pressed_mouse_buttons;
 std::unordered_map<Input::MouseButton, bool> Input::released_mouse_buttons;
+double Input::x_scroll_offset;
+double Input::y_scroll_offset;
 
 std::unordered_map<int, Input::Key> glfw_key_map =
 {
@@ -102,6 +104,10 @@ void Input::Init()
 {
     glfwSetKeyCallback(Graphics::window, KeyCallback);
     glfwSetMouseButtonCallback(Graphics::window, MouseButtonCallback);
+    glfwSetScrollCallback(Graphics::window, MouseScrollCallback);
+
+    x_scroll_offset = 0.0f;
+    y_scroll_offset = 0.0f;
 }
 
 void Input::BeginNewFrame()
@@ -111,23 +117,25 @@ void Input::BeginNewFrame()
     released_keys.clear();
     pressed_mouse_buttons.clear();
     released_mouse_buttons.clear();
+    x_scroll_offset = 0.0f;
+    y_scroll_offset = 0.0f;
 }
 
-void Input::CursorWindowPosition(GLFWwindow* window, float* x_pos, float* y_pos)
+void Input::CursorWindowPosition(float* x_pos, float* y_pos)
 {
     double x, y;
-    glfwGetCursorPos(window, &x, &y);
+    glfwGetCursorPos(Graphics::window, &x, &y);
     *x_pos = x;
     *y_pos = y;
 }
 
-void Input::CursorGamePosition(GLFWwindow* window, float* x_pos, float* y_pos)
+void Input::CursorGamePosition(float* x_pos, float* y_pos)
 {
     double x, y;
-    glfwGetCursorPos(window, &x, &y);
+    glfwGetCursorPos(Graphics::window, &x, &y);
 
     int window_width, window_height;
-    glfwGetWindowSize(window, &window_width, &window_height);
+    glfwGetWindowSize(Graphics::window, &window_width, &window_height);
 
     float scale_x = Honeybear::game_width / window_width;
     float scale_y = Honeybear::game_height / window_height;
@@ -136,14 +144,14 @@ void Input::CursorGamePosition(GLFWwindow* window, float* x_pos, float* y_pos)
     *y_pos = y * scale_y;
 }
 
-void Input::CursorWindowPosition(GLFWwindow* window, Vec2* pos)
+void Input::CursorWindowPosition(Vec2* pos)
 {
-    CursorWindowPosition(window, &pos->x, &pos->y);
+    CursorWindowPosition(&pos->x, &pos->y);
 }
 
-void Input::CursorGamePosition(GLFWwindow* window, Vec2* pos)
+void Input::CursorGamePosition(Vec2* pos)
 {
-    CursorGamePosition(window, &pos->x, &pos->y);
+    CursorGamePosition(&pos->x, &pos->y);
 }
 
 void Input::KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int action, int mods)
@@ -192,6 +200,12 @@ void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int 
     }
 }
 
+void Input::MouseScrollCallback(GLFWwindow* window, double x_offset, double y_offset)
+{
+    x_scroll_offset = x_offset;
+    y_scroll_offset = y_offset;
+}
+
 bool Input::WasKeyPressed(Key key)
 {
     return pressed_keys[key];
@@ -220,4 +234,14 @@ bool Input::WasMouseButtonReleased(MouseButton mouse_button)
 bool Input::IsMouseButtonHeld(MouseButton mouse_button)
 {
     return held_mouse_buttons[mouse_button];
+}
+
+bool Input::MouseScrolledUp()
+{
+    return y_scroll_offset > 0.0f;
+}
+
+bool Input::MouseScrolledDown()
+{
+    return y_scroll_offset < 0.0f;
 }

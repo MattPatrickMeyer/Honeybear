@@ -106,10 +106,14 @@ namespace Honeybear
         extern std::unordered_map<MouseButton, bool> pressed_mouse_buttons;
         extern std::unordered_map<MouseButton, bool> released_mouse_buttons;
 
+        extern double x_scroll_offset;
+        extern double y_scroll_offset;
+
         void Init();
         void BeginNewFrame();
         void KeyCallback(GLFWwindow* window, int glfw_key, int scancode, int action, int mods);
         void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+        void MouseScrollCallback(GLFWwindow* window, double x_offset, double y_offset);
 
         bool WasKeyPressed(Key key);
         bool WasKeyReleased(Key key);
@@ -119,10 +123,13 @@ namespace Honeybear
         bool WasMouseButtonReleased(MouseButton mouse_button);
         bool IsMouseButtonHeld(MouseButton mouse_button);
 
-        void CursorWindowPosition(GLFWwindow* window, float* x_pos, float* y_pos);
-        void CursorGamePosition(GLFWwindow* window, float* x_pos, float* y_pos);
-        void CursorWindowPosition(GLFWwindow* window, Vec2* pos);
-        void CursorGamePosition(GLFWwindow* window, Vec2* pos);
+        bool MouseScrolledUp();
+        bool MouseScrolledDown();
+
+        void CursorWindowPosition(float* x_pos, float* y_pos);
+        void CursorGamePosition(float* x_pos, float* y_pos);
+        void CursorWindowPosition(Vec2* pos);
+        void CursorGamePosition(Vec2* pos);
     };
 };
 
