@@ -36,6 +36,8 @@ namespace Honeybear
     {
         SpriteSheet* sprite_sheet = nullptr;
 
+        uint32_t id;
+
         int width;
         int height;
 
