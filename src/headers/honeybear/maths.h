@@ -117,6 +117,14 @@ namespace Honeybear
     void Rotate(Vec2& value, const Vec2& origin, const float angle_deg);
     void Rotate(Vec2& value, const Vec2& origin, const float cos_angle, const float sin_angle);
     float Distance(const Vec2& a, const Vec2& b);
+
+    // -------------------
+    // ** VEC2 OPERATOR OVERLOADS **
+    // -------------------
+    Vec2& operator+=(Vec2& a, const Vec2& b);
+    Vec2& operator+=(Vec2& a, const float b);
+    Vec2& operator*=(Vec2& a, const Vec2& b);
+    Vec2& operator*=(Vec2& a, const float b);
 };
 
 #endif

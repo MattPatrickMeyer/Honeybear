@@ -703,6 +703,11 @@ Texture* Graphics::LoadTexture(const std::string& texture_file_name, const Filte
     unsigned char* data = stbi_load(texture_file_name.c_str(), &width, &height, &nrChannels, desired_channels);
     std::cout << stbi_failure_reason() << std::endl;
 
+    if(!data)
+    {
+        return nullptr;
+    }
+
     GLuint filter = GL_LINEAR;
     if(filter_type == NEAREST) filter = GL_NEAREST;
 
@@ -1363,6 +1368,7 @@ Sprite* Graphics::GetSprite(const uint32_t sprite_id)
 void Graphics::CreateSprite(const uint32_t sprite_id, SpriteSheet* sprite_sheet, int tex_x, int tex_y, int tex_w, int tex_h)
 {
     sprites[sprite_id].id = sprite_id;
+    sprites[sprite_id].name = "test";
     sprites[sprite_id].sprite_sheet = sprite_sheet;
     sprites[sprite_id].width = tex_w;
     sprites[sprite_id].height = tex_h;

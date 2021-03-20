@@ -359,3 +359,31 @@ void Honeybear::Interp(Vec4& value, const Vec4& a, const Vec4& b, const double t
     Interp(value.z, a.z, b.z, t);
     Interp(value.w, a.w, b.w, t);
 }
+
+Vec2& Honeybear::operator+=(Vec2& a, const Vec2& b)
+{
+    a.x += b.x;
+    a.y += b.y;
+    return a;
+}
+
+Vec2& Honeybear::operator+=(Vec2& a, const float b)
+{
+    a.x += b;
+    a.y += b;
+    return a;
+}
+
+Vec2& Honeybear::operator*=(Vec2& a, const Vec2& b)
+{
+    a.x *= b.x;
+    a.y *= b.y;
+    return a;
+}
+
+Vec2& Honeybear::operator*=(Vec2& a, const float b)
+{
+    a.x *= b;
+    a.y *= b;
+    return a;
+}
