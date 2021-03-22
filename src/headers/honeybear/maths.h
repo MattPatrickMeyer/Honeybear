@@ -123,8 +123,12 @@ namespace Honeybear
     // -------------------
     Vec2& operator+=(Vec2& a, const Vec2& b);
     Vec2& operator+=(Vec2& a, const float b);
+    Vec2& operator-=(Vec2& a, const Vec2& b);
+    Vec2& operator-=(Vec2& a, const float b);
     Vec2& operator*=(Vec2& a, const Vec2& b);
     Vec2& operator*=(Vec2& a, const float b);
+    Vec2& operator/=(Vec2& a, const Vec2& b);
+    Vec2& operator/=(Vec2& a, const float b);
 };
 
 #endif

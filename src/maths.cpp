@@ -374,6 +374,20 @@ Vec2& Honeybear::operator+=(Vec2& a, const float b)
     return a;
 }
 
+Vec2& Honeybear::operator-=(Vec2& a, const Vec2& b)
+{
+    a.x -= b.x;
+    a.y -= b.y;
+    return a;
+}
+
+Vec2& Honeybear::operator-=(Vec2& a, const float b)
+{
+    a.x -= b;
+    a.y -= b;
+    return a;
+}
+
 Vec2& Honeybear::operator*=(Vec2& a, const Vec2& b)
 {
     a.x *= b.x;
@@ -385,5 +399,19 @@ Vec2& Honeybear::operator*=(Vec2& a, const float b)
 {
     a.x *= b;
     a.y *= b;
+    return a;
+}
+
+Vec2& Honeybear::operator/=(Vec2& a, const Vec2& b)
+{
+    a.x /= b.x;
+    a.y /= b.y;
+    return a;
+}
+
+Vec2& Honeybear::operator/=(Vec2& a, const float b)
+{
+    a.x /= b;
+    a.y /= b;
     return a;
 }

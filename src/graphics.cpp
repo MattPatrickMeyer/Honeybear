@@ -723,8 +723,8 @@ Texture* Graphics::LoadTexture(const std::string& texture_file_name, const Filte
     texture->height = height;
     texture->internal_format = GL_RGBA;
     texture->image_format = GL_RGBA;
-    texture->wrap_s = GL_REPEAT;
-    texture->wrap_t = GL_REPEAT;
+    texture->wrap_s = GL_CLAMP_TO_EDGE;
+    texture->wrap_t = GL_CLAMP_TO_EDGE;
 
     glGenTextures(1, &texture->ID);
     glBindTexture(GL_TEXTURE_2D, texture->ID);
