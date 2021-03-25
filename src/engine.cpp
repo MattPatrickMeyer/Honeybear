@@ -22,7 +22,6 @@ Engine::update_function Engine::update_func;
 Engine::begin_frame_function Engine::begin_frame_func;
 Engine::update_fixed_function Engine::update_fixed_func;
 Engine::interpolate_state_function Engine::interpolate_state_func;
-Engine::handle_input_function Engine::handle_input_func;
 
 namespace
 {
@@ -42,7 +41,7 @@ void Engine::Init(int window_width, int window_height, const std::string& window
     Input::Init();
 }
 
-void Engine::RunFixed()
+void Engine::Run()
 {
     double elapsed_time = 0.0f;
     double current_time = Ticks();
@@ -52,8 +51,6 @@ void Engine::RunFixed()
     {
         Input::BeginNewFrame();
         glfwPollEvents();
-
-        ProcessInput();
 
         begin_frame_func();
 
@@ -104,60 +101,6 @@ void Engine::RunFixed()
     glfwTerminate();
 }
 
-void Engine::Run()
-{
-    float last_update_time = Ticks();
-
-    while(!glfwWindowShouldClose(Graphics::window))
-    {
-        ProcessInput();
-
-        const float current_time = Ticks();
-        const float frame_time = current_time - last_update_time;
-        total_elapsed_time += frame_time * game_speed;
-        last_frame_time = frame_time;
-
-        last_update_time = current_time;
-
-        if(frame_time > MAX_TIME_STEP)
-        {
-            float total_frame_time = frame_time;
-            while(total_frame_time > 0.0f)
-            {
-                float dt = std::min(total_frame_time, MAX_TIME_STEP) * game_speed;
-                total_frame_time -= MAX_TIME_STEP;
-                //Update(dt);
-                update_func(dt);
-            }
-        }
-        else
-        {
-            float dt = frame_time * game_speed;
-            //Update(dt);
-            update_func(dt);
-        }
-
-        Render();
-
-        // -- calc average frame rate --
-        fps_records[fps_record_index] = 1.0f / frame_time;
-        fps_record_index = (fps_record_index + 1) % 100;
-
-        float total = 0.0f;
-        for(size_t i = 0; i < FPS_RECORD_COUNT; ++i)
-        {
-            total += fps_records[i];
-        }
-        average_fps = int(total / FPS_RECORD_COUNT);
-        // -----------------------------
-
-        Input::BeginNewFrame();
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
-}
-
 double Engine::Ticks()
 {
     // returns the time in seconds (since glfw was initialized)
@@ -173,12 +116,6 @@ void Engine::Render()
     draw_func();
 
     Graphics::SwapBuffers();
-}
-
-void Engine::ProcessInput()
-{
-    //HandleInput();
-    handle_input_func();
 }
 
 void Engine::Quit()
@@ -221,9 +158,4 @@ void Engine::SetUpdateFixedCallback(update_fixed_function func)
 void Engine::SetInterpolateStateCallback(interpolate_state_function func)
 {
     interpolate_state_func = func;
-}
-
-void Engine::SetHandleInputCallback(handle_input_function func)
-{
-    handle_input_func = func;
 }

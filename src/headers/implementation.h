@@ -8,7 +8,6 @@ namespace Implementation
     void BeginFrame();
     void UpdateFixed(const double dt);
     void InterpolateState(const double t);
-    void HandleInput();
 }; 
 
 #endif

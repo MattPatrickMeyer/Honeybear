@@ -52,7 +52,7 @@ const int max_vertex_count = max_quad_count * 4;
 const int max_index_count = max_quad_count * 6;
 
 const char* default_vert_shader = "#version 330 core\nlayout (location = 0) in vec3 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nout vec2 TexCoords;\nout vec4 Colour;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\ngl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n}";
-const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nvec4 sample = texture(image, TexCoords);\nFragColor = sample * vec4(Colour.rgb * Colour.a, Colour.a);\n}";
+const char* default_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nout vec4 FragColor;\nuniform sampler2D image;\nvoid main()\n{\nFragColor = texture(image, TexCoords) * vec4(Colour.rgb * Colour.a, Colour.a);\n}";
 const char* msdf_font_vert_shader = "#version 330 core\nlayout (location = 0) in vec3 vertex;\nlayout (location = 1) in vec2 tex_coords;\nlayout (location = 2) in vec4 colour;\nlayout (std140) uniform Matrices\n{\nmat4 projection;\n};\nout vec2 TexCoords;\nout vec4 Colour;\nout float DistanceFactor;\nvoid main()\n{\nTexCoords = tex_coords;\nColour = colour;\nDistanceFactor = vertex.z;\ngl_Position = projection * vec4(vertex.xy, 0.0, 1.0);\n}";
 const char* msdf_font_frag_shader = "#version 330 core\nin vec2 TexCoords;\nin vec4 Colour;\nin float DistanceFactor;\nout vec4 FragColor;\nuniform sampler2D image;\nfloat median(float r, float g, float b) {\nreturn max(min(r, g), min(max(r, g), b));\n}\nvoid main()\n{\nvec3 sample = texture(image, TexCoords).rgb;\nfloat sigDist = DistanceFactor*(median(sample.r, sample.g, sample.b) - 0.5);\nfloat opacity = clamp(sigDist + 0.5, 0.0, 1.0);\nopacity *= Colour.a;\nFragColor = vec4(Colour.rgb * opacity, opacity);\n}";
 
@@ -112,7 +112,9 @@ void Graphics::Init(uint32_t window_width, uint32_t window_height, const std::st
 
     // create the default shader programs
     CreateShaderProgram("default",   default_vert_shader, default_frag_shader);
+    //LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     CreateShaderProgram("msdf_font", msdf_font_vert_shader, msdf_font_frag_shader);
+    //LoadShader("msdf_font", "res/shaders/msdf_font.vert", "res/shaders/msdf_font.frag");
 
     InitUniformBlocks();
 

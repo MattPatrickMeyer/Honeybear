@@ -38,10 +38,9 @@ void Implementation::Init()
     Engine::SetBeginFrameCallback(BeginFrame);
     Engine::SetDrawCallback(Draw);
     Engine::SetUpdateFixedCallback(UpdateFixed);
-    Engine::SetHandleInputCallback(HandleInput);
     Engine::SetInterpolateStateCallback(InterpolateState);
 
-    Graphics::LoadShader("test",            nullptr, "res/shaders/test.frag");
+    Graphics::LoadShader("sprite",          nullptr, "res/shaders/sprite.frag");
     Graphics::LoadShader("second_tex_test", nullptr, "res/shaders/second_tex_test.frag");
     //Graphics::LoadShader("default", "res/shaders/default.vert", "res/shaders/default.frag");
     //Graphics::LoadShader("msdf_font", "res/shaders/msdf_font.vert", "res/shaders/msdf_font.frag");
@@ -69,7 +68,7 @@ void Implementation::Init()
 
     std::cout << stbi_failure_reason() << std::endl;
 
-    Engine::RunFixed();
+    Engine::Run();
 }
 
 bool key_down = false;
@@ -120,7 +119,9 @@ void Implementation::Draw()
 
     if(Input::IsMouseButtonHeld(Input::MOUSE_BUTTON_LEFT))
     {
-        Graphics::RenderSprite(*Graphics::GetSprite(998), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        Graphics::ActivateShader("sprite");
+        Graphics::RenderSprite(*Graphics::GetSprite(799), Vec2(100.0f), angle, Vec2(16.0f), another_test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        Graphics::DeactivateShader();
     }
 
     // Graphics::ActivateShader("second_tex_test");
@@ -142,7 +143,12 @@ void Implementation::Draw()
 bool full_screen = false;
 bool v_sync = false;
 
-void Implementation::HandleInput()
+void Implementation::InterpolateState(const double t)
+{
+    Interp(inter_test, prev_test, test, t);
+}
+
+void Implementation::BeginFrame()
 {
     if(Input::WasKeyPressed(Input::KEY_ESC))
     {
@@ -190,15 +196,6 @@ void Implementation::HandleInput()
     {
         Graphics::LoadSpritesFile("res/images/sprites.txt", Graphics::NEAREST);
     }
-}
-
-void Implementation::InterpolateState(const double t)
-{
-    Interp(inter_test, prev_test, test, t);
-}
-
-void Implementation::BeginFrame()
-{
     if(Input::MouseScrolledUp())
     {
         test += 1.0f;

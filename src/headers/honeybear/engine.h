@@ -23,20 +23,16 @@ namespace Honeybear
         typedef void (*begin_frame_function)(void);
         typedef void (*update_fixed_function)(const double dt);
         typedef void (*interpolate_state_function)(const double t);
-        typedef void (*handle_input_function)(void);
 
         extern draw_function draw_func;
         extern update_function update_func;
         extern begin_frame_function begin_frame_func;
         extern update_fixed_function update_fixed_func;
         extern interpolate_state_function interpolate_state_func;
-        extern handle_input_function handle_input_func;
 
         void Init(int window_width, int window_height, const std::string& window_title);
         void Run();
-        void RunFixed();
         void Render();
-        void ProcessInput();
         void Quit();
 
         double Ticks();
@@ -46,7 +42,6 @@ namespace Honeybear
         void SetBeginFrameCallback(begin_frame_function func);
         void SetUpdateFixedCallback(update_fixed_function func);
         void SetInterpolateStateCallback(interpolate_state_function func);
-        void SetHandleInputCallback(handle_input_function func);
 
         void SetGameSize(const float w, const float h);
         void SetFixedTimeStep(const float value);
