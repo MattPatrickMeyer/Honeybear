@@ -70,6 +70,16 @@ float Vec2::Dot(const Vec2& other) const
     return(x * other.x) + (y * other.y);
 }
 
+float Vec2::CrossProduct(const Vec2& other) const
+{
+    return (x * other.y) - (y * other.y);
+}
+
+float Vec2::SquaredMagnitude() const
+{
+    return x*x + y*y;
+}
+
 float Vec2::Magnitude() const
 {
     return std::sqrt(x*x + y*y);
@@ -115,11 +125,6 @@ bool Vec2::operator==(const Vec2& other) const
 {
     return x == other.x
         && y == other.y;
-}
-
-Vec2 Vec2::operator-(const Vec2& other) const
-{
-    return Subtract(other);
 }
 
 Vec2 Vec2::Rotated(const Vec2& anchor_point, float angle_deg) const
@@ -358,6 +363,54 @@ void Honeybear::Interp(Vec4& value, const Vec4& a, const Vec4& b, const double t
     Interp(value.y, a.y, b.y, t);
     Interp(value.z, a.z, b.z, t);
     Interp(value.w, a.w, b.w, t);
+}
+
+bool Honeybear::operator<(const Vec2& a, const Vec2& b)
+{
+    if(a.x < b.x) return true;
+    if(a.x > b.x) return false;
+    if(a.y < b.y) return true;
+    return false;
+}
+
+Vec2 Honeybear::operator+(const Vec2& a, const Vec2& b)
+{
+    return Vec2(a.x + b.x, a.y + b.y);
+}
+
+Vec2 Honeybear::operator+(const Vec2& a, const float b)
+{
+    return Vec2(a.x + b, a.y + b);
+}
+
+Vec2 Honeybear::operator-(const Vec2& a, const Vec2& b)
+{
+    return Vec2(a.x - b.x, a.y - b.y);
+}
+
+Vec2 Honeybear::operator-(const Vec2& a, const float b)
+{
+    return Vec2(a.x - b, a.y - b);
+}
+
+Vec2 Honeybear::operator*(const Vec2& a, const Vec2& b)
+{
+    return Vec2(a.x * b.x, a.y * b.y);
+}
+
+Vec2 Honeybear::operator*(const Vec2& a, const float b)
+{
+    return Vec2(a.x * b, a.y * b);
+}
+
+Vec2 Honeybear::operator/(const Vec2& a, const Vec2& b)
+{
+    return Vec2(a.x / b.x, a.y / b.y);
+}
+
+Vec2 Honeybear::operator/(const Vec2& a, const float b)
+{
+    return Vec2(a.x / b, a.y / b);
 }
 
 Vec2& Honeybear::operator+=(Vec2& a, const Vec2& b)

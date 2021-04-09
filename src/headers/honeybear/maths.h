@@ -18,7 +18,9 @@ namespace Honeybear
 
         // todo: remove member functions
         float Dot(const Vec2& other) const;
+        float CrossProduct(const Vec2& other) const;
         float Magnitude() const;
+        float SquaredMagnitude() const;
         float Distance(const Vec2& other) const;
 
         Vec2 Normalised() const;
@@ -31,8 +33,8 @@ namespace Honeybear
 
         bool NonZero() const;
 
+        // todo: move
         bool operator==(const Vec2& other) const;
-        Vec2 operator-(const Vec2& other) const;
     };
 
     struct Vec3
@@ -121,6 +123,18 @@ namespace Honeybear
     // -------------------
     // ** VEC2 OPERATOR OVERLOADS **
     // -------------------
+
+    bool operator<(const Vec2& a, const Vec2& b);
+
+    Vec2 operator+(const Vec2& a, const Vec2& b);
+    Vec2 operator+(const Vec2& a, const float b);
+    Vec2 operator-(const Vec2& a, const Vec2& b);
+    Vec2 operator-(const Vec2& a, const float b);
+    Vec2 operator*(const Vec2& a, const Vec2& b);
+    Vec2 operator*(const Vec2& a, const float b);
+    Vec2 operator/(const Vec2& a, const Vec2& b);
+    Vec2 operator/(const Vec2& a, const float b);
+
     Vec2& operator+=(Vec2& a, const Vec2& b);
     Vec2& operator+=(Vec2& a, const float b);
     Vec2& operator-=(Vec2& a, const Vec2& b);
