@@ -65,6 +65,11 @@ Vec4::Vec4(const float x, const float y, const float z, const float w) :
 Vec4 Vec4::ZERO = Vec4();
 // --------------------------------
 
+Vec2 Vec2::Project(const Vec2& other) const
+{
+    return (Dot(other) / other.Dot(other)) * other;
+}
+
 float Vec2::Dot(const Vec2& other) const
 {
     return(x * other.x) + (y * other.y);

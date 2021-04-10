@@ -23,6 +23,7 @@ namespace Honeybear
         float SquaredMagnitude() const;
         float Distance(const Vec2& other) const;
 
+        Vec2 Project(const Vec2& other) const;
         Vec2 Normalised() const;
         Vec2 Perp() const;
         Vec2 Negated() const;
