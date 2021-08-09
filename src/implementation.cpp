@@ -97,23 +97,29 @@ void Implementation::Draw()
     Vec2 mouse_pos;
     Input::CursorGamePosition(&mouse_pos);
 
+    int window_width, window_height;
+    Graphics::GetResolution(&window_width, &window_height);
+
+    float stats_font_size = 20.0f;
+
     float fps_width, fps_height;
-    Graphics::CalcTextDimensions(std::to_string(Engine::average_fps), "roboto_mono", 10.0f, &fps_width, &fps_height);
+    Graphics::CalcTextDimensions(std::to_string(Engine::average_fps), "roboto_mono", stats_font_size, &fps_width, &fps_height);
 
     float frame_time_width, frame_time_height;
-    Graphics::CalcTextDimensions(std::to_string(Engine::last_frame_time), "roboto_mono", 10.0f, &frame_time_width, &frame_time_height);
+    Graphics::CalcTextDimensions(std::to_string(Engine::last_frame_time), "roboto_mono", stats_font_size, &frame_time_width, &frame_time_height);
 
     float game_speed_width, game_speed_height;
-    Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", 10.0f, &game_speed_width, &game_speed_height);
+    Graphics::CalcTextDimensions(std::to_string(Honeybear::game_speed), "roboto_mono", stats_font_size, &game_speed_width, &game_speed_height);
 
-    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 100.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
-    Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
-    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 4.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
+    Graphics::RenderText(std::to_string(test), Vec2(50.0f, 100.0f), "roboto_mono", 20.0f, test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
+    Graphics::RenderText(std::to_string(inter_test), Vec2(50.0f, 50.0f), "roboto_mono", 20.0f, test_frame_buffer, Vec4(1.0f, 1.0f, 1.0f, 0.3f));
+
+    Graphics::RenderText("(" + std::to_string(mouse_pos.x) + ", " + std::to_string(mouse_pos.y) + ")", mouse_pos, "roboto_mono", 4.0f, test_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText("This is a test :)", Vec2(20.0f, 200.0f), "roboto_mono", another_test, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
     // Graphics::RenderText(std::to_string(fps_width), Vec2(20.0f, 120.0f), "roboto_mono", 20.0f, ui_frame_buffer, Vec4(1.0f, 0.6f, 0.6f, 1.0f));
-    Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(Honeybear::game_width - fps_width, 0.0f), "roboto_mono", 10.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(Honeybear::game_width - frame_time_width, fps_height), "roboto_mono", 10.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(Honeybear::game_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", 10.0f, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(Engine::average_fps), Vec2(window_width - fps_width, 0.0f), "roboto_mono", stats_font_size, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(window_width - frame_time_width, fps_height), "roboto_mono", stats_font_size, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
+    Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(window_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", stats_font_size, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
     // Graphics::FillRectangle(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));
     // Graphics::RenderFrameBufferToQuad(little_frame_buffer, 100.0f, 100.0f, 100.0f, 100.0f, ui_frame_buffer);
@@ -138,10 +144,10 @@ void Implementation::Draw()
     // Graphics::FillTriangle(Vec2(100.0f / 3 + x_test, 0.0f), Vec2(250.0f / 3 + x_test, 200.0f / 3), Vec2(100.0f / 3 + x_test, 200.0f / 3), ui_frame_buffer, Vec4(1.0f));
     // Graphics::DeactivateShader();
 
-    // Graphics::RenderFrameBuffer(test_frame_buffer);
+    Graphics::RenderFrameBuffer(test_frame_buffer);
     Graphics::RenderFrameBuffer(another_test_frame_buffer);
     Graphics::RenderFrameBuffer(ui_frame_buffer);
-    // Graphics::RenderFrameBuffer(multi_sample_frame_buffer);
+    //Graphics::RenderFrameBuffer(multi_sample_frame_buffer);
     //Graphics::RenderFrameBuffer(little_frame_buffer);
 }
 
@@ -162,7 +168,7 @@ void Implementation::UpdateBuffers(const float window_width, const float window_
     Graphics::EnableBufferAutoScaling(another_test_frame_buffer, scale_val);
     Graphics::UpdateFrameBufferSize(another_test_frame_buffer, window_width, window_height);
 
-    Graphics::EnableBufferAutoScaling(ui_frame_buffer, scale_val);
+    //Graphics::EnableBufferAutoScaling(ui_frame_buffer, scale_val);
     Graphics::UpdateFrameBufferSize(ui_frame_buffer, window_width, window_height);
 
     Graphics::EnableBufferAutoScaling(multi_sample_frame_buffer, scale_val);
