@@ -114,9 +114,11 @@ namespace Honeybear
 
             float width;
             float height;
-            float game_pixel_size;
-            bool use_game_pixel_scaling;
-            bool mapped_to_window_resolution;
+            //float game_pixel_size;
+            //bool use_game_pixel_scaling;
+            float auto_scaling_value;
+            bool use_auto_scaling;
+            //bool mapped_to_window_resolution;
             bool multisampled;
             bool resolved;
             bool depth_testing_enabled;
@@ -266,10 +268,12 @@ namespace Honeybear
         void FillCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, Vec4* colours, size_t num_indices, int* indices, const uint32_t frame_buffer_index, const int texture_id = -1);
 
         uint32_t AddFrameBuffer();
-        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
+        uint32_t AddFrameBuffer(const uint32_t width, const uint32_t height);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);
-        uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4, const bool use_game_pixel_scaling = true, const bool mapped_to_window_resolution = false);
+        uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4);
         uint32_t GetFrameBufferTextureID(const uint32_t frame_buffer_index);
+        void EnableBufferAutoScaling(const uint32_t frame_buffer_index, const float auto_scaling_value);
+        void DisableBufferAutoScaling(const uint32_t frame_buffer_index);
         void AttachDepthBuffer(const uint32_t frame_buffer_index);
         void ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index);
         void RenderFrameBuffer(const uint32_t frame_buffer_index);

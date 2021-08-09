@@ -88,7 +88,8 @@ namespace Honeybear
             KEY_PAGE_UP,
             KEY_PAGE_DOWN,
             KEY_DELETE,
-            KEY_END
+            KEY_END,
+            KEY_SEMICOLON
         };
 
         enum MouseButton

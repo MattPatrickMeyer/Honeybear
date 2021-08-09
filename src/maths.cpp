@@ -19,6 +19,16 @@ Vec2::Vec2(const float x, const float y) :
     y(y)
 {}
 
+Vec2::Vec2(const Vec3& other) : 
+    x(other.x),
+    y(other.y)
+{}
+
+Vec2::Vec2(const Vec4& other) :
+    x(other.x),
+    y(other.y)
+{}
+
 Vec2 Vec2::ZERO = Vec2();
 
 Vec3::Vec3() :
@@ -37,6 +47,18 @@ Vec3::Vec3(const float x, const float y, const float z) :
     x(x),
     y(y),
     z(z)
+{}
+
+Vec3::Vec3(const Vec2& other) : 
+    x(other.x),
+    y(other.y),
+    z(0.0f)
+{}
+
+Vec3::Vec3(const Vec4& other) :
+    x(other.x),
+    y(other.y),
+    z(other.z)
 {}
 
 Vec3 Vec3::ZERO = Vec3();
@@ -60,6 +82,20 @@ Vec4::Vec4(const float x, const float y, const float z, const float w) :
     y(y),
     z(z),
     w(w)
+{}
+
+Vec4::Vec4(const Vec2& other) : 
+    x(other.x),
+    y(other.y),
+    z(0.0f),
+    w(0.0f)
+{}
+
+Vec4::Vec4(const Vec3& other) :
+    x(other.x),
+    y(other.y),
+    z(other.z),
+    w(0.0f)
 {}
 
 Vec4 Vec4::ZERO = Vec4();

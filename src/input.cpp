@@ -90,7 +90,8 @@ std::unordered_map<int, Input::Key> glfw_key_map =
     { GLFW_KEY_PAGE_UP,       Input::KEY_PAGE_UP },
     { GLFW_KEY_PAGE_DOWN,     Input::KEY_PAGE_DOWN },
     { GLFW_KEY_DELETE,        Input::KEY_DELETE },
-    { GLFW_KEY_END,           Input::KEY_END }
+    { GLFW_KEY_END,           Input::KEY_END },
+    { GLFW_KEY_SEMICOLON,     Input::KEY_SEMICOLON }
 };
 
 std::unordered_map<int, Input::MouseButton> glfw_mouse_button_map =

@@ -184,6 +184,9 @@ Vec2 Polygon::ClosestPoint(const Vec2 point)
     return closest_point;
 }
 
+Line::Line()
+{}
+
 Line::Line(const float x1, const float y1, const float x2, const float y2) :
     start(x1, y1),
     end(x2, y2)
@@ -272,6 +275,7 @@ Projection Honeybear::ProjectToAxis(const Line& line, Vec2 axis)
     }
 }
 
+// todo: this probably isn't a good idea lmao
 bool Line::operator==(const Line& other) const
 {
     return (start == other.start || start == other.end)

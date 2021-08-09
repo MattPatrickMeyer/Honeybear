@@ -847,7 +847,7 @@ void Graphics::RenderSprite(const Sprite& sprite, const Vec3& position, const Ve
         Rotate(bottom_left, anchor_point, cos_angle, sin_angle);
     }
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // bottom right
     batch.buffer_ptr->position.x = bottom_right.x * pixel_size;
@@ -905,7 +905,7 @@ void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& po
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     batch.buffer_ptr->position.x = pos_a.x * pixel_size;
     batch.buffer_ptr->position.y = pos_a.y * pixel_size;
@@ -947,7 +947,7 @@ void Graphics::FillRectangle(const float x, const float y, const float z, const 
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // bottom right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
@@ -1006,7 +1006,7 @@ void Graphics::FillCircle(const Vec2& pos, const float radius, const uint32_t fr
         return;
     }
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // -----------------------------
     // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
@@ -1066,7 +1066,7 @@ void Graphics::FillConvexPoly(const std::vector<Vec2>& points, const uint32_t fr
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // set up vertices
     for(size_t i = 0; i < points.size(); ++i)
@@ -1097,7 +1097,7 @@ void Graphics::DrawCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, V
 {
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, num_indices, LINES);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     for(size_t i = 0; i < num_verts; ++i)
     {
@@ -1133,7 +1133,7 @@ void Graphics::FillCustom(size_t num_verts, Vec3* positions, Vec2* tex_coords, V
 
     DoBatchRenderSetUp(frame_buffer_index, tex_id, num_indices, TEXTURE);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     for(size_t i = 0; i < num_verts; ++i)
     {
@@ -1160,7 +1160,7 @@ void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame
 
     DoBatchRenderSetUp(frame_buffer_index, batch.shape_texture, indices_count, LINES);
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // start
     batch.buffer_ptr->position.x = start.x * pixel_size;
@@ -1202,7 +1202,7 @@ void Graphics::DrawCircle(const Vec2& pos, const float radius, const uint32_t fr
         return;
     }
 
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
 
     // -----------------------------
     // the below formula was taken from here: https://stackoverflow.com/questions/11774038/how-to-render-a-circle-with-as-few-vertices-as-possible
@@ -1404,10 +1404,10 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t samples)
 {
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
-    return AddMultiSampledFrameBuffer(window_width, window_height, samples, true, true);
+    return AddMultiSampledFrameBuffer(window_width, window_height, samples);
 }
 
-uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples, const bool use_game_pixel_scaling, const bool mapped_to_window_resolution)
+uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples)
 {
     // todo: cleanup: mostly copy paste from AddFrameBuffer
     frame_buffers.push_back(FrameBuffer());
@@ -1442,9 +1442,11 @@ uint32_t Graphics::AddMultiSampledFrameBuffer(const uint32_t width, const uint32
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f;
-    frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
-    frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
+    // frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f;
+    // frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
+    frame_buffer->use_auto_scaling = false;
+    frame_buffer->auto_scaling_value = 1.0f;
+    //frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
     frame_buffer->multisampled = true;
     frame_buffer->resolved = false;
     frame_buffer->samples = samples;
@@ -1548,14 +1550,27 @@ uint32_t Graphics::GetFrameBufferTextureID(const uint32_t frame_buffer_index)
         : frame_buffer->tex_colour_buffer;
 }
 
+void Graphics::EnableBufferAutoScaling(const uint32_t frame_buffer_index, const float auto_scaling_value)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    frame_buffer->use_auto_scaling = true;
+    frame_buffer->auto_scaling_value = auto_scaling_value;
+}
+
+void Graphics::DisableBufferAutoScaling(const uint32_t frame_buffer_index)
+{
+    FrameBuffer* frame_buffer = &frame_buffers[frame_buffer_index];
+    frame_buffer->use_auto_scaling = false;
+}
+
 uint32_t Graphics::AddFrameBuffer()
 {
     int window_width, window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
-    return AddFrameBuffer(window_width, window_height, true, true);
+    return AddFrameBuffer(window_width, window_height);
 }
 
-uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, const bool use_game_pixel_scaling, const bool mapped_to_window_resolution)
+uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height)
 {
     frame_buffers.push_back(FrameBuffer());
     uint32_t frame_buffer_index = frame_buffers.size() - 1;
@@ -1576,9 +1591,11 @@ uint32_t Graphics::AddFrameBuffer(const uint32_t width, const uint32_t height, c
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f; // todo: janky as fuck
-    frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
-    frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
+    //frame_buffer->game_pixel_size = use_game_pixel_scaling ? width / Honeybear::game_width : 1.0f; // todo: janky as fuck
+    //frame_buffer->use_game_pixel_scaling = use_game_pixel_scaling;
+    //frame_buffer->mapped_to_window_resolution = mapped_to_window_resolution;
+    frame_buffer->use_auto_scaling = false;
+    frame_buffer->auto_scaling_value = 1.0f;
     frame_buffer->multisampled = false;
     frame_buffer->resolved = false;
     frame_buffer->depth_testing_enabled = false;
@@ -1713,10 +1730,10 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
 
     frame_buffer->width = width;
     frame_buffer->height = height;
-    if(frame_buffer->use_game_pixel_scaling)
-    {
-        frame_buffer->game_pixel_size = width / Honeybear::game_width;
-    }
+    // if(frame_buffer->use_game_pixel_scaling)
+    // {
+    //     frame_buffer->game_pixel_size = width / Honeybear::game_width;
+    // }
 
     // ----------------------------------------------------------------------------
     // update the VAO used to for rendering another framebuffer to this framebuffer
@@ -1837,7 +1854,7 @@ void Graphics::RenderFrameBufferToQuad(const uint32_t source_frame_buffer_index,
 
     DoBatchRenderSetUp(dest_frame_buffer_index, tex_buffer, indices_count);
 
-    float pixel_size = frame_buffers[dest_frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[dest_frame_buffer_index].auto_scaling_value;
 
     // bottom right
     batch.buffer_ptr->position.x = (x + w) * pixel_size;
@@ -1896,13 +1913,13 @@ void Graphics::ChangeResolution(const uint32_t width, const uint32_t height)
 
     glViewport(0, 0, width, height);
 
-    // update every framebuffer that is mapped to size of the window
+    // update every framebuffer that is mapped to the size of the window
     for(size_t i = 0; i < frame_buffers.size(); ++i)
     {
-        if(frame_buffers[i].mapped_to_window_resolution)
-        {
-            UpdateFrameBufferSize(i, width, height);
-        }
+        // if(frame_buffers[i].mapped_to_window_resolution)
+        // {
+        //     UpdateFrameBufferSize(i, width, height);
+        // }
     }
 
     // update the quad VAO that is used for rendering framebuffers to the screen
@@ -1985,7 +2002,7 @@ Graphics::MSDF_Font* Graphics::LoadMSDFFont(const std::string& font_id, const st
 
 void Graphics::RenderText(const std::string& text, const Vec2& position, const std::string& font_id, const float size, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
     float adjusted_size = size * pixel_size;
 
     MSDF_Font* font = &msdf_fonts[font_id];
@@ -2187,6 +2204,6 @@ void Graphics::SetScissorRegion(const int x, const int y, const int width, const
 void Graphics::SetScissorRegion(const uint32_t frame_buffer_index, const int x, const int y, const int width, const int height)
 {
     CheckAndStartNewBatch();
-    float pixel_size = frame_buffers[frame_buffer_index].game_pixel_size;
+    float pixel_size = frame_buffers[frame_buffer_index].auto_scaling_value;
     glScissor(x * pixel_size, y * pixel_size, width * pixel_size, height * pixel_size);
 }

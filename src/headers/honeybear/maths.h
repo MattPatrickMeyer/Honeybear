@@ -5,6 +5,8 @@
 
 namespace Honeybear
 {
+    struct Vec3;
+    struct Vec4;
     struct Vec2
     {
         float x;
@@ -13,6 +15,8 @@ namespace Honeybear
         Vec2();
         Vec2(const float value);
         Vec2(const float x, const float y);
+        Vec2(const Vec3& other);
+        Vec2(const Vec4& other);
 
         static Vec2 ZERO;
 
@@ -47,6 +51,8 @@ namespace Honeybear
         Vec3();
         Vec3(const float value);
         Vec3(const float x, const float y, const float z);
+        Vec3(const Vec2& other);
+        Vec3(const Vec4& other);
 
         static Vec3 ZERO;
     };
@@ -61,6 +67,8 @@ namespace Honeybear
         Vec4();
         Vec4(const float value);
         Vec4(const float x, const float y, const float z, const float w);
+        Vec4(const Vec2& other);
+        Vec4(const Vec3& other);
 
         static Vec4 ZERO;
     };

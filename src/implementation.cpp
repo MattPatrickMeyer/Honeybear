@@ -19,6 +19,9 @@ uint32_t multi_sample_frame_buffer;
 
 Texture* palette;
 
+const float GAME_WIDTH = 640.0f;
+const float GAME_HEIGHT = 360.0f;
+
 void Implementation::Init()
 {
     AllocConsole();
@@ -54,8 +57,10 @@ void Implementation::Init()
     test_frame_buffer =         Graphics::AddFrameBuffer();
     another_test_frame_buffer = Graphics::AddFrameBuffer();
     ui_frame_buffer =           Graphics::AddFrameBuffer();
-    little_frame_buffer =       Graphics::AddFrameBuffer(100.0f, 100.0f, false);
+    little_frame_buffer =       Graphics::AddFrameBuffer(100.0f, 100.0f);
     multi_sample_frame_buffer = Graphics::AddMultiSampledFrameBuffer(8);
+
+    UpdateBuffers(window_width, window_height);
 
     Graphics::SetClearColour(ui_frame_buffer, Vec4(0.0f));
     Graphics::SetClearColour(Vec4(0.47f, 0.54f, 0.67f, 1.0f));
@@ -64,7 +69,7 @@ void Implementation::Init()
     //Texture* palette = Graphics::LoadTexture("res/images/sprites.png", Graphics::NEAREST);
     palette = Graphics::LoadTexture("res/images/palette.png", Graphics::NEAREST);
 
-    Graphics::LoadMSDFFont("roboto_mono",   "res/fonts/roboto_mono/atlas.png", "res/fonts/roboto_mono/data.csv");
+    Graphics::LoadMSDFFont("roboto_mono", "res/fonts/roboto_mono/atlas.png", "res/fonts/roboto_mono/data.csv");
 
     std::cout << stbi_failure_reason() << std::endl;
 
@@ -148,6 +153,22 @@ void Implementation::InterpolateState(const double t)
     Interp(inter_test, prev_test, test, t);
 }
 
+void Implementation::UpdateBuffers(const float window_width, const float window_height)
+{
+    float scale_val = window_height / GAME_HEIGHT;
+    Graphics::EnableBufferAutoScaling(test_frame_buffer, scale_val);
+    Graphics::UpdateFrameBufferSize(test_frame_buffer, window_width, window_height);
+
+    Graphics::EnableBufferAutoScaling(another_test_frame_buffer, scale_val);
+    Graphics::UpdateFrameBufferSize(another_test_frame_buffer, window_width, window_height);
+
+    Graphics::EnableBufferAutoScaling(ui_frame_buffer, scale_val);
+    Graphics::UpdateFrameBufferSize(ui_frame_buffer, window_width, window_height);
+
+    Graphics::EnableBufferAutoScaling(multi_sample_frame_buffer, scale_val);
+    Graphics::UpdateFrameBufferSize(multi_sample_frame_buffer, window_width, window_height);
+}
+
 void Implementation::BeginFrame()
 {
     if(Input::WasKeyPressed(Input::KEY_ESC))
@@ -165,14 +186,17 @@ void Implementation::BeginFrame()
     if(Input::WasKeyPressed(Input::KEY_F1))
     {
         Graphics::ChangeResolution(1280, 720);
+        UpdateBuffers(1280, 720);
     }
     if(Input::WasKeyPressed(Input::KEY_F2))
     {
         Graphics::ChangeResolution(1920, 1080);
+        UpdateBuffers(1920, 1080);
     }
     if(Input::WasKeyPressed(Input::KEY_F3))
     {
         Graphics::ChangeResolution(2560, 1440);
+        UpdateBuffers(2560, 1440);
     }
     if(Input::WasKeyPressed(Input::KEY_F12))
     {

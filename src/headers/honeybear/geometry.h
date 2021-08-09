@@ -36,6 +36,7 @@ namespace Honeybear
     {
         Vec2 start;
         Vec2 end;
+        Line();
         Line(const float x1, const float y1, const float x2, const float y2);
         Line(const Vec2 start, const Vec2 end);
 
