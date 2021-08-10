@@ -114,11 +114,8 @@ namespace Honeybear
 
             float width;
             float height;
-            //float game_pixel_size;
-            //bool use_game_pixel_scaling;
-            float auto_scaling_value;
             bool use_auto_scaling;
-            //bool mapped_to_window_resolution;
+            //bool mapped_to_window_resolution; // todo: maybe use this in the future
             bool multisampled;
             bool resolved;
             bool depth_testing_enabled;
@@ -272,7 +269,7 @@ namespace Honeybear
         uint32_t AddMultiSampledFrameBuffer(const uint32_t samples = 4);
         uint32_t AddMultiSampledFrameBuffer(const uint32_t width, const uint32_t height, const uint32_t samples = 4);
         uint32_t GetFrameBufferTextureID(const uint32_t frame_buffer_index);
-        void EnableBufferAutoScaling(const uint32_t frame_buffer_index, const float auto_scaling_value);
+        void EnableBufferAutoScaling(const uint32_t frame_buffer_index);
         void DisableBufferAutoScaling(const uint32_t frame_buffer_index);
         void AttachDepthBuffer(const uint32_t frame_buffer_index);
         void ResolveMultiSampledFrameBuffer(const uint32_t frame_buffer_index);

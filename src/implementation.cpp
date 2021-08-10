@@ -19,7 +19,6 @@ uint32_t multi_sample_frame_buffer;
 
 Texture* palette;
 
-const float GAME_WIDTH = 640.0f;
 const float GAME_HEIGHT = 360.0f;
 
 void Implementation::Init()
@@ -35,7 +34,8 @@ void Implementation::Init()
     // int window_height = 720;
 
     Engine::Init(window_width, window_height, "Honeybear!");
-    Engine::SetGameSize(640, 360);
+    //Engine::SetGameSize(640, 360);
+    Engine::SetGameScale(window_height / GAME_HEIGHT);
     Engine::SetFixedTimeStep(1.0f / 240.0f);
 
     Engine::SetBeginFrameCallback(BeginFrame);
@@ -59,6 +59,10 @@ void Implementation::Init()
     ui_frame_buffer =           Graphics::AddFrameBuffer();
     little_frame_buffer =       Graphics::AddFrameBuffer(100.0f, 100.0f);
     multi_sample_frame_buffer = Graphics::AddMultiSampledFrameBuffer(8);
+
+    Graphics::EnableBufferAutoScaling(test_frame_buffer);
+    Graphics::EnableBufferAutoScaling(another_test_frame_buffer);
+    Graphics::EnableBufferAutoScaling(multi_sample_frame_buffer);
 
     UpdateBuffers(window_width, window_height);
 
@@ -96,6 +100,7 @@ void Implementation::Draw()
 {
     Vec2 mouse_pos;
     Input::CursorGamePosition(&mouse_pos);
+    //Input::CursorWindowPosition(&mouse_pos);
 
     int window_width, window_height;
     Graphics::GetResolution(&window_width, &window_height);
@@ -161,17 +166,11 @@ void Implementation::InterpolateState(const double t)
 
 void Implementation::UpdateBuffers(const float window_width, const float window_height)
 {
-    float scale_val = window_height / GAME_HEIGHT;
-    Graphics::EnableBufferAutoScaling(test_frame_buffer, scale_val);
+    Engine::SetGameScale(window_height / GAME_HEIGHT);
+
     Graphics::UpdateFrameBufferSize(test_frame_buffer, window_width, window_height);
-
-    Graphics::EnableBufferAutoScaling(another_test_frame_buffer, scale_val);
     Graphics::UpdateFrameBufferSize(another_test_frame_buffer, window_width, window_height);
-
-    //Graphics::EnableBufferAutoScaling(ui_frame_buffer, scale_val);
     Graphics::UpdateFrameBufferSize(ui_frame_buffer, window_width, window_height);
-
-    Graphics::EnableBufferAutoScaling(multi_sample_frame_buffer, scale_val);
     Graphics::UpdateFrameBufferSize(multi_sample_frame_buffer, window_width, window_height);
 }
 
@@ -203,6 +202,16 @@ void Implementation::BeginFrame()
     {
         Graphics::ChangeResolution(2560, 1440);
         UpdateBuffers(2560, 1440);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F5))
+    {
+        Graphics::ChangeResolution(2560, 1080);
+        UpdateBuffers(2560, 1080);
+    }
+    if(Input::WasKeyPressed(Input::KEY_F6))
+    {
+        Graphics::ChangeResolution(3440, 1440);
+        UpdateBuffers(3440, 1440);
     }
     if(Input::WasKeyPressed(Input::KEY_F12))
     {

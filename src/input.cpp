@@ -135,14 +135,16 @@ void Input::CursorGamePosition(float* x_pos, float* y_pos)
     double x, y;
     glfwGetCursorPos(Graphics::window, &x, &y);
 
-    int window_width, window_height;
-    glfwGetWindowSize(Graphics::window, &window_width, &window_height);
+    // int window_width, window_height;
+    // glfwGetWindowSize(Graphics::window, &window_width, &window_height);
 
-    float scale_x = Honeybear::game_width / window_width;
-    float scale_y = Honeybear::game_height / window_height;
+    // float scale_x = Honeybear::game_width / window_width;
+    // float scale_y = Honeybear::game_height / window_height;
 
-    *x_pos = x * scale_x;
-    *y_pos = y * scale_y;
+    // *x_pos = x * scale_x;
+    // *y_pos = y * scale_y;
+    *x_pos = x / Honeybear::game_scale;
+    *y_pos = y / Honeybear::game_scale;
 }
 
 void Input::CursorWindowPosition(Vec2* pos)

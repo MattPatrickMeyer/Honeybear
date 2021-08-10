@@ -8,8 +8,7 @@
 
 using namespace Honeybear;
 
-float Honeybear::game_width;
-float Honeybear::game_height;
+float Honeybear::game_scale = 1.0f;
 float Honeybear::game_speed = 1.0f;
 
 int Honeybear::Engine::average_fps;
@@ -34,8 +33,6 @@ namespace
 
 void Engine::Init(int window_width, int window_height, const std::string& window_title)
 {
-    game_width = window_width;
-    game_height = window_height;
     fixed_time_step = DEFAULT_FIXED_TIME_STEP;
     Graphics::Init(window_width, window_height, window_title);
     Input::Init();
@@ -69,7 +66,6 @@ void Engine::Run()
 
         while(accumulator >= fixed_time_step)
         {
-            //UpdateFixed(fixed_time_step);
             update_fixed_func(fixed_time_step);
             elapsed_time += fixed_time_step;
             total_elapsed_time = elapsed_time;
@@ -80,7 +76,6 @@ void Engine::Run()
         const double alpha = accumulator / fixed_time_step;
 
         // interpolate the game from previous to current state based on alpha value
-        //InterpolateState(alpha);
         interpolate_state_func(alpha);
 
         Render();
@@ -112,7 +107,6 @@ void Engine::Render()
     Graphics::Clear();
     Graphics::ClearFrameBuffers();
 
-    //Draw();
     draw_func();
 
     Graphics::SwapBuffers();
@@ -124,10 +118,9 @@ void Engine::Quit()
     glfwSetWindowShouldClose(Graphics::window, true);
 }
 
-void Engine::SetGameSize(const float w, const float h)
+void Engine::SetGameScale(const float scale)
 {
-    game_width = w;
-    game_height = h;
+    game_scale = scale;
 }
 
 void Engine::SetFixedTimeStep(const float value)

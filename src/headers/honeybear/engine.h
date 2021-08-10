@@ -7,8 +7,7 @@
 
 namespace Honeybear
 {
-    extern float game_width;
-    extern float game_height;
+    extern float game_scale;
     extern float game_speed;
 
     namespace Engine
@@ -43,7 +42,7 @@ namespace Honeybear
         void SetUpdateFixedCallback(update_fixed_function func);
         void SetInterpolateStateCallback(interpolate_state_function func);
 
-        void SetGameSize(const float w, const float h);
+        void SetGameScale(const float scale);
         void SetFixedTimeStep(const float value);
     };
 };
