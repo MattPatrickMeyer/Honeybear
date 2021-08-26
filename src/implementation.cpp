@@ -126,7 +126,7 @@ void Implementation::Draw()
     Graphics::RenderText(std::to_string(Engine::last_frame_time), Vec2(window_width - frame_time_width, fps_height), "roboto_mono", stats_font_size, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
     Graphics::RenderText(std::to_string(Honeybear::game_speed), Vec2(window_width - game_speed_width, frame_time_height + fps_height), "roboto_mono", stats_font_size, ui_frame_buffer, Vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-    // Graphics::FillRectangle(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));
+    // Graphics::FillRect(0.0f, 0.0f, 200.0f, 200.0f, little_frame_buffer, Vec4(1.0f));
     // Graphics::RenderFrameBufferToQuad(little_frame_buffer, 100.0f, 100.0f, 100.0f, 100.0f, ui_frame_buffer);
 
     //Graphics::ActivateShader("default");
@@ -142,7 +142,7 @@ void Implementation::Draw()
 
     // Graphics::ActivateShader("second_tex_test");
     // Graphics::SetShaderFramebufferTexture("second_tex_test", "second_image", ui_frame_buffer, 1);
-    // Graphics::FillRectangle(0.0f, 0.0f, 100.0f, 100.0f, another_test_frame_buffer, Vec4(1.0f));
+    // Graphics::FillRect(0.0f, 0.0f, 100.0f, 100.0f, another_test_frame_buffer, Vec4(1.0f));
     // Graphics::DeactivateShader();
 
     // Graphics::ActivateShader("test");

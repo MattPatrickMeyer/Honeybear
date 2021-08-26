@@ -940,12 +940,12 @@ void Graphics::FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& po
     batch.index_count += indices_count;
 }
 
-void Graphics::FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::FillRect(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
-    FillRectangle(x, y, 0.0f, w, h, frame_buffer_index, colour);
+    FillRect(x, y, 0.0f, w, h, frame_buffer_index, colour);
 }
 
-void Graphics::FillRectangle(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::FillRect(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     int indices_count = 6;
 
@@ -1202,7 +1202,7 @@ void Graphics::DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame
     batch.current_index_offset += indices_count;
 }
 
-void Graphics::DrawRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
+void Graphics::DrawRect(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     // todo: slow (but who cares?) this shouldn't use DrawLine and should be done properly with GL_LINE_STRIP
     DrawLine(Vec2(x, y), Vec2(x + w, y), frame_buffer_index, colour);
@@ -1285,7 +1285,7 @@ void Graphics::FlushBatch()
     if(batch.batch_type == LINES) render_type = GL_LINES;
     else if(batch.batch_type == FONT)
     {
-        // todo: think about another solution for this (maybe font rendering should have it's own batch system)
+        // todo: think about another solution for this (maybe font rendering should have its own batch system)
         glUseProgram(shaders["msdf_font"]);
         activated_shader_id = "msdf_font";
         should_reset_shader = true;

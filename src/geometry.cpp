@@ -24,33 +24,39 @@ AABB::AABB(const Vec2& position, const Vec2& size) :
     size(size)
 {}
 
-Rectangle::Rectangle(const float x, const float y, const float width, const float height) :
+Rect::Rect(const float x, const float y, const float width, const float height) :
     position(x, y),
     width(width),
     height(height)
 {}
 
-float Rectangle::Left() const
+Rect::Rect(const Vec2& pos, const Vec2& size) :
+    position(pos),
+    width(size.x),
+    height(size.y)
+{}
+
+float Rect::Left() const
 {
     return position.x;
 }
 
-float Rectangle::Right() const
+float Rect::Right() const
 {
     return position.x + width;
 }
 
-float Rectangle::Top() const
+float Rect::Top() const
 {
     return position.y;
 }
 
-float Rectangle::Bottom() const
+float Rect::Bottom() const
 {
     return position.y + height;
 }
 
-bool Rectangle::Contains(Rectangle& other) const
+bool Rect::Contains(Rect& other) const
 {
     if(other.Left() < Left())
         return false;
@@ -63,12 +69,12 @@ bool Rectangle::Contains(Rectangle& other) const
     return true;
 }
 
-bool Honeybear::RectangleContainsPoint(const Rectangle& rectangle, const Vec2 point)
+bool Honeybear::RectContainsPoint(const Rect& rect, const Vec2 point)
 {
-    if(point.x < rectangle.Left())   return false;
-    if(point.x > rectangle.Right())  return false;
-    if(point.y < rectangle.Top())    return false;
-    if(point.y > rectangle.Bottom()) return false;
+    if(point.x < rect.Left())   return false;
+    if(point.x > rect.Right())  return false;
+    if(point.y < rect.Top())    return false;
+    if(point.y > rect.Bottom()) return false;
     return true;
 }
 
@@ -305,11 +311,24 @@ bool Honeybear::PolarCompare::operator() (const Vec2& a, const Vec2& b)
     return angle_a < angle_b;
 }
 
-Rectangle Honeybear::RectangleFromAABB(const AABB& aabb)
+Rect Honeybear::RectFromAABB(const AABB& aabb)
 {
-    return Rectangle(
+    return Rect(
         aabb.position.x - aabb.size.x,
         aabb.position.y - aabb.size.y,
         aabb.size.x * 2,
         aabb.size.y * 2);
+}
+
+bool Honeybear::RectsOverlap(const Rect& a, const Rect& b)
+{
+    if(a.Left() > b.Right())
+        return false;
+    if(a.Right() < b.Left())
+        return false;
+    if(a.Top() > b.Bottom())
+        return false;
+    if(a.Bottom() < b.Top())
+        return false;
+    return true;
 }

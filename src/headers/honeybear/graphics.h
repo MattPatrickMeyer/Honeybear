@@ -251,13 +251,13 @@ namespace Honeybear
         void RenderSprite(const Sprite& sprite, const Vec3& position, const Vec2& size, const float angle_degrees, const Vec2& origin, const uint32_t frame_buffer_index, const SpriteSheetLayer sprite_sheet_layer, const Vec4& colour = Vec4(1.0f));
 
         void DrawLine(const Vec2& start, const Vec2& end, const uint32_t frame_buffer_index, const Vec4& colour);
-        void DrawRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
+        void DrawRect(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
         void DrawCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour);
         void DrawPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 
         void FillTriangle(const Vec2& pos_a, const Vec2& pos_b, const Vec2& pos_c, const uint32_t frame_buffer_index, const Vec4& colour);
-        void FillRectangle(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
-        void FillRectangle(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillRect(const float x, const float y, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
+        void FillRect(const float x, const float y, const float z, const float w, const float h, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillCircle(const Vec2& pos, const float radius, const uint32_t frame_buffer_index, const Vec4& colour);
         void FillConvexPoly(const std::vector<Vec2>& points, const uint32_t frame_buffer_index, const Vec4& colour);
 

@@ -16,20 +16,21 @@ namespace Honeybear
         AABB(const Vec2& position, const Vec2& size);
     };
 
-    struct Rectangle
+    struct Rect
     {
         Vec2 position;
         float width;
         float height;
 
-        Rectangle(const float x, const float y, const float width, const float height);
+        Rect(const float x, const float y, const float width, const float height);
+        Rect(const Vec2& pos, const Vec2& size);
 
         float Left() const;
         float Right() const;
         float Top() const;
         float Bottom() const;
 
-        bool Contains(Rectangle& other) const;
+        bool Contains(Rect& other) const;
     };
 
     struct Line
@@ -87,9 +88,10 @@ namespace Honeybear
         float GetOverlap(const Projection& other);
     };
 
-    Rectangle RectangleFromAABB(const AABB& aabb);
+    Rect RectFromAABB(const AABB& aabb);
 
-    bool RectangleContainsPoint(const Rectangle& rectangle, const Vec2 point);
+    bool RectContainsPoint(const Rect& rect, const Vec2 point);
+    bool RectsOverlap(const Rect& a, const Rect& b);
 
     Projection ProjectToAxis(const Circle& circle, Vec2 axis);
     Projection ProjectToAxis(const Polygon& polygon, Vec2 axis);
