@@ -233,6 +233,7 @@ namespace Honeybear
 
         Texture* LoadTexture(const std::string& texture_file_name, const FilterType filter_type);
         void BindTexture(const GLuint texture_id, const uint8_t texture_unit);
+        void CheckAndUnbindTexture(const GLuint texture_id);
 
         void LoadSpritesFile(const std::string& file_name, const FilterType filter_type);
         SpriteSheet* LoadSpriteSheet(const std::string& sprite_sheet_name, const char* diffuse, const char* specular, const char* normal, const FilterType filter_type);

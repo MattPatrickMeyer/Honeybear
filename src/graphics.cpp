@@ -752,6 +752,22 @@ void Graphics::BindTexture(const GLuint texture_id, const uint8_t texture_unit)
     }
 }
 
+void Graphics::CheckAndUnbindTexture(const GLuint texture_id)
+{
+    std::map<uint8_t, uint32_t>::iterator it = bound_textures.begin();
+    while(it != bound_textures.end())
+    {
+        if(it->second == texture_id)
+        {
+            bound_textures.erase(it++);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
 void Graphics::RenderSprite(const Sprite& sprite, const Vec2& position, const uint32_t frame_buffer_index, const Vec4& colour)
 {
     Vec2 size(sprite.width, sprite.height);
@@ -1695,6 +1711,7 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
     // todo: cleanup
     if(frame_buffer->multisampled)
     {
+        CheckAndUnbindTexture(frame_buffer->tex_colour_buffer);
         glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
         glGenTextures(1, &frame_buffer->tex_colour_buffer);
@@ -1703,6 +1720,7 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, frame_buffer->tex_colour_buffer, 0);
 
+        CheckAndUnbindTexture(frame_buffer->intermediate_tex_colour_buffer);
         glDeleteTextures(1, &frame_buffer->intermediate_tex_colour_buffer);
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->intermediate_FBO);
         glGenTextures(1, &frame_buffer->intermediate_tex_colour_buffer);
@@ -1716,6 +1734,7 @@ void Graphics::UpdateFrameBufferSize(const uint32_t frame_buffer_index, const ui
     else
     {
         // delete the existing FBO texture/s
+        CheckAndUnbindTexture(frame_buffer->tex_colour_buffer);
         glDeleteTextures(1, &frame_buffer->tex_colour_buffer);
 
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer->FBO);
